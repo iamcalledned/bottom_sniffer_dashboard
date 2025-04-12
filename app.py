@@ -86,19 +86,16 @@ def normalize_rates_and_curve(data):
     ust_2s10s = data.get("ust_2s10s_curve", 0)
     ust_3m10y = data.get("ust_3m10y_curve", 0)
 
-    # Adjust thresholds for curve inversion
-    curve_inversion_score = max(0, min(100, (0.5 - ust_2s10s) * 200))  # Penalize near-zero spreads
-    rates_score = max(0, min(100, (two_year + ten_year + thirty_year - 10) * 10))  # Penalize high yields
+    # Penalize near-zero or barely positive spreads
+    curve_inversion_score = max(0, min(100, (0.5 - ust_2s10s) * 300))  # Increased sensitivity
+    rates_score = max(0, min(100, (two_year + ten_year + thirty_year - 9) * 15))  # Penalize high yields more
 
     normalized_score = (curve_inversion_score + rates_score) / 2
 
-    # Log the inputs and outputs
     print(f"[Rates & Curve] Inputs: 2Y={two_year}, 10Y={ten_year}, 30Y={thirty_year}, "
-          f"2s10s={ust_2s10s}, 3m10y={ust_3m10y} | "
-          f"Normalized Score: {normalized_score}")
+          f"2s10s={ust_2s10s}, 3m10y={ust_3m10y} | Normalized Score: {normalized_score}")
 
     return normalized_score
-
 
 def normalize_credit_and_volatility(data):
     vix = data.get("vix", 0)
@@ -106,19 +103,17 @@ def normalize_credit_and_volatility(data):
     vx_tlt = data.get("vx_tlt", 0)
     hy_credit_spread = data.get("hy_credit_spread", 0)
 
-    # Adjust thresholds for VIX and MOVE
-    vix_score = max(0, min(100, (vix - 15) * 5))  # VIX > 35 = 100, VIX < 15 = 0
+    # Adjust thresholds for VIX and HY spreads
+    vix_score = max(0, min(100, (vix - 15) * 6))  # Increased sensitivity for VIX > 35
     move_score = max(0, min(100, (move_index - 100) * 2))  # MOVE > 150 = 100
-    credit_spread_score = max(0, min(100, hy_credit_spread * 12.5))  # HY Spread > 8% = 100
+    credit_spread_score = max(0, min(100, hy_credit_spread * 15))  # Increased sensitivity for HY spreads
 
     normalized_score = (vix_score + move_score + credit_spread_score + vx_tlt) / 4
 
-    # Log the inputs and outputs
     print(f"[Credit & Volatility] Inputs: VIX={vix}, MOVE={move_index}, VXTLT={vx_tlt}, "
           f"HY Spread={hy_credit_spread} | Normalized Score: {normalized_score}")
 
     return normalized_score
-
 
 def normalize_macro_indicators(data):
     fed_funds_rate = data.get("fed_funds_rate", 0)
@@ -126,14 +121,13 @@ def normalize_macro_indicators(data):
     unemployment_rate = data.get("unemployment_rate", 0)
     retail_sales = data.get("retail_sales", 0)
 
-    # Example normalization logic
-    unemployment_score = max(0, min(100, (unemployment_rate - 3) * 25))  # Penalize unemployment > 3%
-    inflation_score = max(0, min(100, (cpi_yoy - 2) * 50))  # Penalize CPI > 2%
-    retail_sales_score = max(0, min(100, 100 - (retail_sales / 10000)))  # Penalize lower sales
+    # Penalize elevated unemployment and flat retail sales
+    unemployment_score = max(0, min(100, (unemployment_rate - 3) * 30))  # Increased sensitivity
+    inflation_score = max(0, min(100, (cpi_yoy - 2) * 50))  # CPI > 2 = stress
+    retail_sales_score = max(0, min(100, 100 - (retail_sales / 8000)))  # Penalize lower sales more
 
     normalized_score = (inflation_score + unemployment_score + retail_sales_score + fed_funds_rate) / 4
 
-    # Log the inputs and outputs
     print(f"[Macro Indicators] Inputs: Fed Funds={fed_funds_rate}, CPI YoY={cpi_yoy}, "
           f"Unemployment={unemployment_rate}, Retail Sales={retail_sales} | "
           f"Normalized Score: {normalized_score}")
@@ -146,13 +140,12 @@ def normalize_flight_to_safety(data):
     bitcoin_price = data.get("bitcoin_price", 0)
     sofr_spread = data.get("sofr_spread", 0)
 
-    # Example normalization logic
-    gold_score = max(0, min(100, (gold_price - 1800) / 2))  # Gold > 2000 = 100
-    bitcoin_score = max(0, min(100, (50000 - bitcoin_price) / 500))  # Penalize falling BTC
+    # Penalize rising gold and falling Bitcoin more heavily
+    gold_score = max(0, min(100, (gold_price - 1800) / 1.5))  # Increased sensitivity for gold > 2000
+    bitcoin_score = max(0, min(100, (60000 - bitcoin_price) / 400))  # Penalize falling BTC more
 
     normalized_score = (gold_score + bitcoin_score) / 2
 
-    # Log the inputs and outputs
     print(f"[Flight to Safety] Inputs: Gold={gold_price}, Bitcoin={bitcoin_price}, "
           f"SOFR Spread={sofr_spread} | Normalized Score: {normalized_score}")
 
@@ -252,12 +245,24 @@ def update_composite_score():
         }
 
         # Calculate the composite score
+        rates_and_curve = normalize_rates_and_curve(data)
+        credit_and_volatility = normalize_credit_and_volatility(data)
+        macro_indicators = normalize_macro_indicators(data)
+        flight_to_safety = normalize_flight_to_safety(data)
+
         score = calculate_composite_score(data)
-        composite_score_cache["value"] = score
-        composite_score_cache["timestamp"] = datetime.utcnow()
+        composite_score_cache.update({
+            "value": score,
+            "timestamp": datetime.utcnow(),
+            "rates_and_curve": rates_and_curve,
+            "credit_and_volatility": credit_and_volatility,
+            "macro_indicators": macro_indicators,
+            "flight_to_safety": flight_to_safety,
+        })
         print(f"[Composite Score] Updated: {score}")
     except Exception as e:
         print(f"[Composite Score] Error: {e}")
+
 @app.route("/api/indicator/<path:indicator_name>")
 def get_indicator_data(indicator_name):
     indicator_name = unquote(indicator_name)
@@ -326,7 +331,13 @@ def get_composite_score():
         if composite_score_cache["value"] is not None:
             return jsonify({
                 "composite_score": composite_score_cache["value"],
-                "timestamp": composite_score_cache["timestamp"]
+                "timestamp": composite_score_cache["timestamp"],
+                "details": {
+                    "rates_and_curve": composite_score_cache.get("rates_and_curve"),
+                    "credit_and_volatility": composite_score_cache.get("credit_and_volatility"),
+                    "macro_indicators": composite_score_cache.get("macro_indicators"),
+                    "flight_to_safety": composite_score_cache.get("flight_to_safety"),
+                }
             }), 200
         else:
             return jsonify({"error": "Composite score not available"}), 500
