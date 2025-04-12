@@ -192,8 +192,25 @@
     function updateSniffMeter(score) {
       const el = document.getElementById("sniff-meter");
       if (!el) return;
-      el.innerText = score > 90 ? "💀" : score > 75 ? "🚨" : score > 50 ? "😬" : score > 30 ? "😐" : "😎🚬";
+
+      el.innerText = score > 66 ? "🚨 Risk-Off / Crisis"
+                    : score > 33 ? "😐 Neutral / Volatile"
+                    : "😎 Risk-On";
     }
+
+    function fetchCompositeScore() {
+      fetch("/api/composite_score")
+        .then(res => res.json())
+        .then(data => {
+          if (data.composite_score !== undefined) {
+            updateSniffMeter(data.composite_score);
+          }
+        })
+        .catch(err => console.error("Error fetching composite score:", err));
+    }
+
+    // Call fetchCompositeScore periodically
+    setInterval(fetchCompositeScore, 5000);
   
     function openDetailModal(indicatorName) {
       const modal = document.getElementById("detail-modal");

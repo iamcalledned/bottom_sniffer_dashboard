@@ -49,6 +49,100 @@ INDICATOR_SOURCES = {
     "Stress Composite Score": ("mock_composite", ["DGS2", "DGS10", "DGS30", "FEDFUNDS", "UNRATE"])
 }
 
+def calculate_composite_score(data):
+    """
+    Calculate a composite score (0-100) based on market data and weights.
+    """
+    # Weights for each category
+    weights = {
+        "rates_and_curve": 0.25,
+        "credit_and_volatility": 0.30,
+        "macro_indicators": 0.25,
+        "flight_to_safety": 0.20,
+    }
+
+    # Normalized subscores (0-100) for each category
+    rates_and_curve = normalize_rates_and_curve(data)
+    credit_and_volatility = normalize_credit_and_volatility(data)
+    macro_indicators = normalize_macro_indicators(data)
+    flight_to_safety = normalize_flight_to_safety(data)
+
+    # Weighted composite score
+    composite_score = (
+        weights["rates_and_curve"] * rates_and_curve +
+        weights["credit_and_volatility"] * credit_and_volatility +
+        weights["macro_indicators"] * macro_indicators +
+        weights["flight_to_safety"] * flight_to_safety
+    )
+
+    return round(composite_score, 2)
+
+
+def normalize_rates_and_curve(data):
+    """
+    Normalize rates and curve inversion metrics (0-100).
+    """
+    two_year = data.get("two_year_yield", 0)
+    ten_year = data.get("ten_year_yield", 0)
+    thirty_year = data.get("thirty_year_yield", 0)
+    ust_2s10s = data.get("ust_2s10s_curve", 0)
+    ust_3m10y = data.get("ust_3m10y_curve", 0)
+
+    # Example normalization logic
+    curve_inversion_score = max(0, min(100, abs(ust_2s10s) * 10))  # More negative = higher stress
+    rates_score = max(0, min(100, (two_year + ten_year + thirty_year) / 3))  # Higher rates = higher stress
+
+    return (curve_inversion_score + rates_score) / 2
+
+
+def normalize_credit_and_volatility(data):
+    """
+    Normalize credit and volatility metrics (0-100).
+    """
+    vix = data.get("vix", 0)
+    move_index = data.get("move_index", 0)
+    vx_tlt = data.get("vx_tlt", 0)
+    hy_credit_spread = data.get("hy_credit_spread", 0)
+
+    # Example normalization logic
+    vix_score = max(0, min(100, (vix - 15) * 4))  # VIX > 45 = 100, VIX < 15 = 0
+    move_score = max(0, min(100, move_index / 2))  # MOVE > 200 = 100
+    credit_spread_score = max(0, min(100, hy_credit_spread * 10))  # Higher spreads = higher stress
+
+    return (vix_score + move_score + credit_spread_score + vx_tlt) / 4
+
+
+def normalize_macro_indicators(data):
+    """
+    Normalize macro indicators (0-100).
+    """
+    fed_funds_rate = data.get("fed_funds_rate", 0)
+    cpi_yoy = data.get("cpi_yoy", 0)
+    unemployment_rate = data.get("unemployment_rate", 0)
+    retail_sales = data.get("retail_sales", 0)
+
+    # Example normalization logic
+    inflation_score = max(0, min(100, (cpi_yoy - 2) * 10))  # CPI > 6 = 100, CPI < 2 = 0
+    unemployment_score = max(0, min(100, (unemployment_rate - 3) * 20))  # Unemployment > 8 = 100
+    retail_sales_score = max(0, min(100, 100 - retail_sales))  # Lower retail sales = higher stress
+
+    return (inflation_score + unemployment_score + retail_sales_score + fed_funds_rate) / 4
+
+
+def normalize_flight_to_safety(data):
+    """
+    Normalize flight-to-safety metrics (0-100).
+    """
+    gold_price = data.get("gold_price", 0)
+    bitcoin_price = data.get("bitcoin_price", 0)
+    sofr_spread = data.get("sofr_spread", 0)
+
+    # Example normalization logic
+    gold_score = max(0, min(100, (gold_price - 1500) / 10))  # Gold > 2000 = 100
+    bitcoin_score = max(0, min(100, (50000 - bitcoin_price) / 500))  # Lower BTC = higher stress
+    sofr_score = max(0, min(100, sofr_spread * 10))  # Higher SOFR spread = higher stress
+
+    return (gold_score + bitcoin_score + sofr_score) / 3
 
 def fetch_fred_series(series_ids):
     now = datetime.utcnow()
@@ -175,6 +269,36 @@ def server_status():
         return jsonify({"status": "ok"}), 200
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
+    
+
+@app.route("/api/composite_score")
+def get_composite_score():
+    try:
+        # Gather data from the cache
+        data = {
+            "two_year_yield": fred_cache.get("DGS2", {}).get("value"),
+            "ten_year_yield": fred_cache.get("DGS10", {}).get("value"),
+            "thirty_year_yield": fred_cache.get("DGS30", {}).get("value"),
+            "ust_2s10s_curve": fred_cache.get("DGS10", {}).get("value") - fred_cache.get("DGS2", {}).get("value"),
+            "ust_3m10y_curve": fred_cache.get("DGS10", {}).get("value") - fred_cache.get("TB3MS", {}).get("value"),
+            "fed_funds_rate": fred_cache.get("FEDFUNDS", {}).get("value"),
+            "unemployment_rate": fred_cache.get("UNRATE", {}).get("value"),
+            "cpi_yoy": fred_cache.get("CPIAUCSL", {}).get("value"),
+            "retail_sales": fred_cache.get("RSAFS", {}).get("value"),
+            "vix": history_cache.get("VIX", [{}])[-1].get("value"),
+            "move_index": history_cache.get("MOVE Index", [{}])[-1].get("value"),
+            "vx_tlt": history_cache.get("VXTLT", [{}])[-1].get("value"),
+            "sofr_spread": fred_cache.get("SOFR", {}).get("value") - fred_cache.get("EFFR", {}).get("value"),
+            "hy_credit_spread": fred_cache.get("BAMLH0A0HYM2EY", {}).get("value"),
+            "gold_price": history_cache.get("Gold", [{}])[-1].get("value"),
+            "bitcoin_price": history_cache.get("Bitcoin", [{}])[-1].get("value"),
+        }
+
+        # Calculate the composite score
+        score = calculate_composite_score(data)
+        return jsonify({"composite_score": score}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
     start_background_updaters()

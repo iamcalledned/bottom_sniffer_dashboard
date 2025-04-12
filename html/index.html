@@ -66,27 +66,41 @@
       const message = document.createElement("p");
       message.style.marginTop = "1rem";
       message.style.fontSize = "1rem";
-
-      fetch("/api/status")
-        .then((response) => {
-          if (response.ok) {
-            message.textContent = "Dashboard is online!";
-            message.style.color = "#00b894";
-          } else {
-            throw new Error("Server not responding");
-          }
-        })
-        .catch(() => {
-          button.textContent = "🚧 Dashboard Down for Maintenance";
-          button.style.backgroundColor = "#d63031";
-          button.style.cursor = "not-allowed";
-          button.href = "#";
-          message.textContent = "Please check back later.";
-          message.style.color = "#d63031";
-        })
-        .finally(() => {
-          button.parentNode.insertBefore(message, button.nextSibling);
-        });
+  
+      function checkServerStatus() {
+        fetch("/api/status")
+          .then((response) => {
+            if (response.ok) {
+              button.textContent = "🚀 Launch the Market Dashboard";
+              button.style.backgroundColor = "#00b894";
+              button.style.cursor = "pointer";
+              button.href = "/dashboard";
+              message.textContent = "Dashboard is online!";
+              message.style.color = "#00b894";
+            } else {
+              throw new Error("Server not responding");
+            }
+          })
+          .catch(() => {
+            button.textContent = "🚧 Dashboard Down for Maintenance";
+            button.style.backgroundColor = "#d63031";
+            button.style.cursor = "not-allowed";
+            button.href = "#";
+            message.textContent = "Please check back later.";
+            message.style.color = "#d63031";
+          })
+          .finally(() => {
+            if (!message.parentNode) {
+              button.parentNode.insertBefore(message, button.nextSibling);
+            }
+          });
+      }
+  
+      // Initial check
+      checkServerStatus();
+  
+      // Auto-refresh every 5 seconds
+      setInterval(checkServerStatus, 5000);
     });
   </script>
 </body>
