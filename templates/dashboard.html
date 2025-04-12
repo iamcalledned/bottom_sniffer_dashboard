@@ -3,19 +3,23 @@
 <head>
     <title>{{ config.dashboard_name }}</title>
     <style>
-      body {
-          font-family: sans-serif;
-          margin: 20px;
-      }
-      .category {
-          margin-bottom: 20px;
-          padding: 10px;
-          border: 1px solid #ccc;
-          border-radius: 5px;
-      }
-      .indicator {
-          margin-left: 20px;
-      }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .category {
+            margin-bottom: 30px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        ul {
+            list-style-type: disc;
+            padding-left: 20px;
+        }
     </style>
 </head>
 <body>
@@ -25,7 +29,7 @@
           <h2>{{ category.category }}</h2>
           <ul>
               {% for indicator in category.indicators %}
-                <li class="indicator">{{ indicator }}</li>
+                <li>{{ indicator }}</li>
               {% endfor %}
           </ul>
       </div>
