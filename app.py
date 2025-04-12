@@ -24,6 +24,8 @@ fred_cache = {}
 history_cache = {}
 fred_cache_ttl_minutes = 5
 history_cache_ttl_hours = 6
+composite_score_cache = {"value": None, "timestamp": None}
+
 
 INDICATOR_SOURCES = {
     "2-Year Yield": ("fred", "DGS2"),
@@ -196,12 +198,47 @@ def start_background_updaters():
             prefetch_history()
             sleep(history_cache_ttl_hours * 3600)
 
+    def loop_composite_score():
+        while True:
+            update_composite_score()
+            sleep(fred_cache_ttl_minutes * 60)  # Update composite score periodically
+
     fetch_fred_series(series_ids)
     prefetch_history()
+    update_composite_score()  # Ensure the composite score is calculated at startup
     Thread(target=loop_fred, daemon=True).start()
     Thread(target=loop_history, daemon=True).start()
+    Thread(target=loop_composite_score, daemon=True).start()
 
+def update_composite_score():
+    try:
+        # Gather data from the cache
+        data = {
+            "two_year_yield": fred_cache.get("DGS2", {}).get("value"),
+            "ten_year_yield": fred_cache.get("DGS10", {}).get("value"),
+            "thirty_year_yield": fred_cache.get("DGS30", {}).get("value"),
+            "ust_2s10s_curve": fred_cache.get("DGS10", {}).get("value") - fred_cache.get("DGS2", {}).get("value"),
+            "ust_3m10y_curve": fred_cache.get("DGS10", {}).get("value") - fred_cache.get("TB3MS", {}).get("value"),
+            "fed_funds_rate": fred_cache.get("FEDFUNDS", {}).get("value"),
+            "unemployment_rate": fred_cache.get("UNRATE", {}).get("value"),
+            "cpi_yoy": fred_cache.get("CPIAUCSL", {}).get("value"),
+            "retail_sales": fred_cache.get("RSAFS", {}).get("value"),
+            "vix": history_cache.get("VIX", [{}])[-1].get("value"),
+            "move_index": history_cache.get("MOVE Index", [{}])[-1].get("value"),
+            "vx_tlt": history_cache.get("VXTLT", [{}])[-1].get("value"),
+            "sofr_spread": fred_cache.get("SOFR", {}).get("value") - fred_cache.get("EFFR", {}).get("value"),
+            "hy_credit_spread": fred_cache.get("BAMLH0A0HYM2EY", {}).get("value"),
+            "gold_price": history_cache.get("Gold", [{}])[-1].get("value"),
+            "bitcoin_price": history_cache.get("Bitcoin", [{}])[-1].get("value"),
+        }
 
+        # Calculate the composite score
+        score = calculate_composite_score(data)
+        composite_score_cache["value"] = score
+        composite_score_cache["timestamp"] = datetime.utcnow()
+        print(f"[Composite Score] Updated: {score}")
+    except Exception as e:
+        print(f"[Composite Score] Error: {e}")
 @app.route("/api/indicator/<path:indicator_name>")
 def get_indicator_data(indicator_name):
     indicator_name = unquote(indicator_name)
@@ -267,29 +304,13 @@ def server_status():
 @app.route("/api/composite_score")
 def get_composite_score():
     try:
-        # Gather data from the cache
-        data = {
-            "two_year_yield": fred_cache.get("DGS2", {}).get("value"),
-            "ten_year_yield": fred_cache.get("DGS10", {}).get("value"),
-            "thirty_year_yield": fred_cache.get("DGS30", {}).get("value"),
-            "ust_2s10s_curve": fred_cache.get("DGS10", {}).get("value") - fred_cache.get("DGS2", {}).get("value"),
-            "ust_3m10y_curve": fred_cache.get("DGS10", {}).get("value") - fred_cache.get("TB3MS", {}).get("value"),
-            "fed_funds_rate": fred_cache.get("FEDFUNDS", {}).get("value"),
-            "unemployment_rate": fred_cache.get("UNRATE", {}).get("value"),
-            "cpi_yoy": fred_cache.get("CPIAUCSL", {}).get("value"),
-            "retail_sales": fred_cache.get("RSAFS", {}).get("value"),
-            "vix": history_cache.get("VIX", [{}])[-1].get("value"),
-            "move_index": history_cache.get("MOVE Index", [{}])[-1].get("value"),
-            "vx_tlt": history_cache.get("VXTLT", [{}])[-1].get("value"),
-            "sofr_spread": fred_cache.get("SOFR", {}).get("value") - fred_cache.get("EFFR", {}).get("value"),
-            "hy_credit_spread": fred_cache.get("BAMLH0A0HYM2EY", {}).get("value"),
-            "gold_price": history_cache.get("Gold", [{}])[-1].get("value"),
-            "bitcoin_price": history_cache.get("Bitcoin", [{}])[-1].get("value"),
-        }
-
-        # Calculate the composite score
-        score = calculate_composite_score(data)
-        return jsonify({"composite_score": score}), 200
+        if composite_score_cache["value"] is not None:
+            return jsonify({
+                "composite_score": composite_score_cache["value"],
+                "timestamp": composite_score_cache["timestamp"]
+            }), 200
+        else:
+            return jsonify({"error": "Composite score not available"}), 500
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
