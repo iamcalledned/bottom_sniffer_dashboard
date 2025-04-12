@@ -53,8 +53,8 @@ INDICATOR_SOURCES = {
 
 def calculate_composite_score(data):
     weights = {
-        "rates_and_curve": 0.20,  # Reduced weight
-        "credit_and_volatility": 0.35,  # Increased weight
+        "rates_and_curve": 0.15,  # Reduced weight
+        "credit_and_volatility": 0.40,  # Increased weight
         "macro_indicators": 0.25,
         "flight_to_safety": 0.20,
     }
@@ -107,9 +107,9 @@ def normalize_credit_and_volatility(data):
     hy_credit_spread = data.get("hy_credit_spread", 0)
 
     # Adjust thresholds for VIX and MOVE
-    vix_score = max(0, min(100, (vix - 15) * 4))  # VIX > 35 = 100, VIX < 15 = 0
-    move_score = max(0, min(100, (move_index - 100) / 2))  # MOVE > 200 = 100
-    credit_spread_score = max(0, min(100, hy_credit_spread * 20))  # Penalize wider spreads
+    vix_score = max(0, min(100, (vix - 15) * 5))  # VIX > 35 = 100, VIX < 15 = 0
+    move_score = max(0, min(100, (move_index - 100) * 2))  # MOVE > 150 = 100
+    credit_spread_score = max(0, min(100, hy_credit_spread * 12.5))  # HY Spread > 8% = 100
 
     normalized_score = (vix_score + move_score + credit_spread_score + vx_tlt) / 4
 
@@ -147,7 +147,7 @@ def normalize_flight_to_safety(data):
     sofr_spread = data.get("sofr_spread", 0)
 
     # Example normalization logic
-    gold_score = max(0, min(100, (gold_price - 1800) / 2))  # Penalize rising gold > 1800
+    gold_score = max(0, min(100, (gold_price - 1800) / 2))  # Gold > 2000 = 100
     bitcoin_score = max(0, min(100, (50000 - bitcoin_price) / 500))  # Penalize falling BTC
 
     normalized_score = (gold_score + bitcoin_score) / 2
