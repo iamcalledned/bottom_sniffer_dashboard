@@ -24,9 +24,10 @@
     @media (max-width: 640px) {
       .tabs {
         flex-wrap: wrap;
+        gap: 0.5rem; /* Add spacing between tabs */
       }
       .tab {
-        flex: 1 1 100%;
+        flex: 1 1 calc(50% - 0.5rem); /* Two tabs per row */
         text-align: center;
       }
     }
@@ -237,7 +238,7 @@ Composite Score =
                 datasets: [{
                     data: values,
                     borderColor: "#7dd3fc",
-                    tension: 0.4, // Smooth the line
+                    tension: 0.3, // Smooth the line
                     borderWidth: 2, // Ensure line is visible
                     fill: false, // Disable area fill
                     pointRadius: 0 // Hide points
@@ -418,3 +419,4 @@ Composite Score =
   </script>
   </body>
 </html>
+``` 
