@@ -23,14 +23,17 @@
     /* Improved responsive styling for tabs */
     @media (max-width: 640px) {
       .tabs {
+        display: flex;
         flex-wrap: wrap;
-        gap: 0.5rem; /* Adjust spacing between tabs */
+        gap: 0.5rem; /* Add spacing between tabs */
+        justify-content: center; /* Center align tabs */
       }
       .tab {
         flex: 1 1 calc(50% - 0.5rem); /* Two tabs per row */
         text-align: center;
-        padding: 0.5rem; /* Adjust padding for better usability */
-        font-size: 0.85rem; /* Slightly smaller font size */
+        padding: 0.75rem; /* Add padding for better touch usability */
+        font-size: 0.9rem; /* Adjust font size for smaller screens */
+        white-space: nowrap; /* Prevent text wrapping */
       }
       .grid {
         grid-template-columns: 1fr !important; /* Single column for cards */
@@ -451,3 +454,4 @@ Composite Score =
   </script>
   </body>
 </html>
+``` 
