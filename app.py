@@ -4,11 +4,13 @@ from flask import Flask, render_template, jsonify
 app = Flask(__name__)
 
 def load_config():
-    with open('config.json', 'r') as f:
+    with open(r'/home/ned/market_bot/market_monitor/bottom_sniffer_dashboard/config.json', 'r') as f:
         return json.load(f)
 
 # Load configuration from the JSON file at startup
 config = load_config()
+print("Loaded config:", config)
+
 
 @app.route('/dashboard')
 def dashboard():
