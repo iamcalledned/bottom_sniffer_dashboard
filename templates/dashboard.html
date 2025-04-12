@@ -54,7 +54,9 @@
             <div id="{{ indicator|replace(' ', '_') }}" class="text-3xl font-bold" data-indicator="{{ indicator }}">
               <span class="loading loading-dots loading-md"></span>
             </div>
-            <canvas class="sparkline mt-2" id="chart-{{ indicator|replace(' ', '_') }}"></canvas>
+            <div onclick="openDetailModal('{{ indicator }}')" style="cursor:pointer;">
+              <canvas class="sparkline mt-2" id="chart-{{ indicator|replace(' ', '_') }}"></canvas>
+            </div>
           </div>
         </div>
         {% endfor %}
@@ -71,7 +73,9 @@
             <div id="{{ indicator|replace(' ', '_') }}" class="text-3xl font-bold" data-indicator="{{ indicator }}">
               <span class="loading loading-dots loading-md"></span>
             </div>
-            <canvas class="sparkline mt-2" id="chart-{{ indicator|replace(' ', '_') }}"></canvas>
+            <div onclick="openDetailModal('{{ indicator }}')" style="cursor:pointer;">
+              <canvas class="sparkline mt-2" id="chart-{{ indicator|replace(' ', '_') }}"></canvas>
+            </div>
           </div>
         </div>
         {% endfor %}
@@ -88,7 +92,9 @@
             <div id="{{ indicator|replace(' ', '_') }}" class="text-3xl font-bold" data-indicator="{{ indicator }}">
               <span class="loading loading-dots loading-md"></span>
             </div>
-            <canvas class="sparkline mt-2" id="chart-{{ indicator|replace(' ', '_') }}"></canvas>
+            <div onclick="openDetailModal('{{ indicator }}')" style="cursor:pointer;">
+              <canvas class="sparkline mt-2" id="chart-{{ indicator|replace(' ', '_') }}"></canvas>
+            </div>
           </div>
         </div>
         {% endfor %}
@@ -101,9 +107,19 @@
       <div id="Stress_Composite_Score" class="text-5xl font-extrabold text-primary animate-pulse" data-indicator="Stress Composite Score">⏳</div>
     </div>
 
+    <!-- Modal -->
+    <div id="detail-modal" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center z-50">
+      <div class="bg-base-100 rounded-lg shadow-lg p-6 w-full max-w-3xl relative">
+        <button onclick="closeDetailModal()" class="absolute top-2 right-2 text-xl font-bold text-gray-300">✕</button>
+        <h3 id="modal-title" class="text-xl font-semibold mb-2">📈 Detail</h3>
+        <p id="modal-summary" class="text-sm text-gray-400 mb-4">Summary here</p>
+        <canvas id="modal-chart" height="200"></canvas>
+      </div>
+    </div>
+
     <!-- Footer -->
     <footer class="mt-16 text-center text-sm text-gray-500">
-      Data from FRED, Yahoo Finance, and deeply sniffed by our bots. Built by Bottom Sniffer Labs
+      Data from FRED, Yahoo Finance, and deeply sniffed by our bots. Built with ❤️ by Bottom Sniffer Labs™
     </footer>
   </div>
 
@@ -126,8 +142,6 @@
           if (data.value !== null && data.value !== undefined) {
             const value = data.value.toFixed(2);
             let cls = "text-success";
-
-            // General negative value = red
             if (data.value < 0) cls = "text-error";
             else if (indicatorName.includes("Curve") && data.value < 0) cls = "text-error";
             else if (indicatorName.includes("Unemployment") && data.value > 5) cls = "text-error";
@@ -170,7 +184,7 @@
       else if (score > 75) el.innerText = "🚨";
       else if (score > 50) el.innerText = "😬";
       else if (score > 30) el.innerText = "😐";
-      else el.innerText = "🚬😎";
+      else el.innerText = "😎🚬";
     }
 
     function drawSparkline(canvasId, values) {
@@ -193,12 +207,68 @@
         options: {
           plugins: { legend: { display: false } },
           scales: { x: { display: false }, y: { display: false } },
-          elements: { line: { borderJoinStyle: 'round' } },
           responsive: true,
           maintainAspectRatio: false,
           layout: { padding: 0 }
         }
       });
+    }
+
+    function openDetailModal(indicatorName) {
+      const modal = document.getElementById("detail-modal");
+      const title = document.getElementById("modal-title");
+      const summary = document.getElementById("modal-summary");
+      const chartCanvas = document.getElementById("modal-chart");
+
+      title.innerText = `📈 ${indicatorName}`;
+      summary.innerText = "Loading...";
+
+      modal.classList.remove("hidden");
+
+      fetch(`/api/history/${encodeURIComponent(indicatorName)}`)
+        .then(res => res.json())
+        .then(data => {
+          const values = data.values;
+          const start = values?.[0];
+          const end = values?.[values.length - 1];
+          let pct = start && end ? (((end - start) / start) * 100).toFixed(2) : null;
+
+          summary.innerText = pct ? `7-day change: ${pct}%` : "No data available";
+
+          new Chart(chartCanvas, {
+            type: 'line',
+            data: {
+              labels: values.map((_, i) => `Day ${i + 1}`),
+              datasets: [{
+                label: indicatorName,
+                data: values,
+                borderColor: "#00cec9",
+                backgroundColor: "rgba(0,206,201,0.2)",
+                fill: true,
+                tension: 0.4,
+                pointRadius: 2
+              }]
+            },
+            options: {
+              plugins: { legend: { display: false } },
+              responsive: true,
+              maintainAspectRatio: false,
+              scales: {
+                x: { display: false },
+                y: { title: { display: true, text: "Value" } }
+              }
+            }
+          });
+        });
+    }
+
+    function closeDetailModal() {
+      const modal = document.getElementById("detail-modal");
+      modal.classList.add("hidden");
+
+      const canvas = document.getElementById("modal-chart");
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
 
     function mockChartData() {
