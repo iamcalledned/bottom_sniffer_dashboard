@@ -217,16 +217,19 @@
     }
 
     function fetchCompositeScore() {
-      fetch("/api/composite_score")
-        .then(res => res.json())
-        .then(data => {
-          console.log("[DEBUG] API Response:", data); // Debugging log
-          if (data.composite_score !== undefined) {
-            updateSniffMeter(data.composite_score);
-            document.getElementById("Stress_Composite_Score").innerText = data.composite_score.toFixed(2);
-          }
-        })
-        .catch(err => console.error("[DEBUG] Error fetching composite score:", err));
+        fetch("/api/composite_score")
+            .then(res => res.json())
+            .then(data => {
+                console.log("[DEBUG] API Response:", data);  // Log the API response
+                if (data.composite_score !== undefined) {
+                    updateSniffMeter(data.composite_score);
+                    const el = document.getElementById("Stress_Composite_Score");
+                    if (el) el.innerText = data.composite_score.toFixed(2);
+                } else {
+                    console.error("[DEBUG] Composite score is undefined in API response.");
+                }
+            })
+            .catch(err => console.error("[DEBUG] Error fetching composite score:", err));
     }
 
     document.addEventListener("DOMContentLoaded", () => {

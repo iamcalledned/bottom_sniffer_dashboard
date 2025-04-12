@@ -366,7 +366,7 @@ def get_composite_score():
     try:
         if composite_score_cache["value"] is None:
             update_composite_score()
-        print(f"[DEBUG] Composite Score Cache: {composite_score_cache}")
+        print(f"[DEBUG] Composite Score API Response: {composite_score_cache}")  # Add this log
         return jsonify({
             "composite_score": composite_score_cache["value"],
             "details": {
