@@ -103,7 +103,7 @@
 
     <!-- Footer -->
     <footer class="mt-16 text-center text-sm text-gray-500">
-      Data from FRED, Yahoo Finance, and highly classified sniffing ops. Built with ❤️ by Bottom Sniffer Labs™
+      Data from FRED, Yahoo Finance, and deeply sniffed by our bots. Built with ❤️ by Bottom Sniffer Labs™
     </footer>
   </div>
 
@@ -126,7 +126,10 @@
           if (data.value !== null && data.value !== undefined) {
             const value = data.value.toFixed(2);
             let cls = "text-success";
-            if (indicatorName.includes("Curve") && data.value < 0) cls = "text-error";
+
+            // General negative value = red
+            if (data.value < 0) cls = "text-error";
+            else if (indicatorName.includes("Curve") && data.value < 0) cls = "text-error";
             else if (indicatorName.includes("Unemployment") && data.value > 5) cls = "text-error";
             else if (indicatorName.includes("CPI") && data.value > 4) cls = "text-error";
             else if (data.value === 0) cls = "text-warning";
@@ -134,12 +137,13 @@
             el.innerHTML = `<span class="${cls}">${value}</span>`;
 
             if (indicatorName === "Stress Composite Score") updateSniffMeter(data.value);
-              fetch('/api/history/' + encodeURIComponent(indicatorName))
-                .then(res => res.json())
-                .then(hist => {
-                  drawSparkline("chart-" + elementId, hist.values.length > 0 ? hist.values : mockChartData());
-                });
-            } else {
+
+            fetch('/api/history/' + encodeURIComponent(indicatorName))
+              .then(res => res.json())
+              .then(hist => {
+                drawSparkline("chart-" + elementId, hist.values.length > 0 ? hist.values : mockChartData());
+              });
+          } else {
             el.innerHTML = '<span class="text-warning">N/A</span>';
           }
         })
@@ -166,7 +170,7 @@
       else if (score > 75) el.innerText = "🚨";
       else if (score > 50) el.innerText = "😬";
       else if (score > 30) el.innerText = "😐";
-      else el.innerText = "🚬😎";
+      else el.innerText = "😎🚬";
     }
 
     function drawSparkline(canvasId, values) {
