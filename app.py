@@ -156,6 +156,35 @@ def get_indicator_data(indicator_name):
 def dashboard():
     return render_template("dashboard.html", config=config)
 
+@app.route("/api/history/<path:indicator_name>")
+def get_indicator_history(indicator_name):
+    indicator_name = unquote(indicator_name)
+    source_info = INDICATOR_SOURCES.get(indicator_name)
+
+    if not source_info:
+        return jsonify({"name": indicator_name, "values": []})
+
+    try:
+        if source_info[0] == "yahoo":
+            ticker = yf.Ticker(source_info[1])
+            hist = ticker.history(period="7d", interval="1d")
+            if not hist.empty:
+                values = hist['Close'].dropna().tolist()
+                return jsonify({"name": indicator_name, "values": [round(v, 2) for v in values]})
+
+        elif source_info[0] in ["fred", "fred_yoy", "fred_spread"]:
+            sid = source_info[1] if source_info[0] != "fred_spread" else source_info[1][1]
+            series = fred.get_series(sid)
+            if series is not None:
+                values = series.dropna().tail(7).tolist()
+                return jsonify({"name": indicator_name, "values": [round(v, 4) for v in values]})
+
+    except Exception as e:
+        return jsonify({"name": indicator_name, "values": [], "error": str(e)})
+
+    return jsonify({"name": indicator_name, "values": []})
+
+
 
 # Run setup
 start_fred_prefetcher()

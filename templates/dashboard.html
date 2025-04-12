@@ -134,8 +134,12 @@
             el.innerHTML = `<span class="${cls}">${value}</span>`;
 
             if (indicatorName === "Stress Composite Score") updateSniffMeter(data.value);
-            drawSparkline("chart-" + elementId, mockChartData());
-          } else {
+              fetch('/api/history/' + encodeURIComponent(indicatorName))
+                .then(res => res.json())
+                .then(hist => {
+                  drawSparkline("chart-" + elementId, hist.values.length > 0 ? hist.values : mockChartData());
+                });
+            } else {
             el.innerHTML = '<span class="text-warning">N/A</span>';
           }
         })
@@ -162,7 +166,7 @@
       else if (score > 75) el.innerText = "🚨";
       else if (score > 50) el.innerText = "😬";
       else if (score > 30) el.innerText = "😐";
-      else el.innerText = "😎🚬";
+      else el.innerText = "🚬😎";
     }
 
     function drawSparkline(canvasId, values) {
