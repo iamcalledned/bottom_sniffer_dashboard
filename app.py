@@ -53,7 +53,6 @@ INDICATOR_SOURCES = {
     "Bitcoin Price": ("yahoo", "BTC-USD"),
     "Dollar Index (DXY)": ("yahoo", "DX-Y.NYB"),
     "UST 2s/10s Curve": ("fred_spread", ("DGS2", "DGS10"))
-    # Additional mappings can be added here
 }
 
 @app.route('/api/indicator/<indicator_name>')
@@ -64,7 +63,8 @@ def get_indicator_data(indicator_name):
     """
     source_info = INDICATOR_SOURCES.get(indicator_name)
     if not source_info:
-        return jsonify({"name": indicator_name, "error": "No data source mapped"}), 404
+        return jsonify({"name": indicator_name, "value": None, "error": "No data source mapped"}), 200
+
 
     source_type = source_info[0]
     if source_type == "yahoo":

@@ -40,28 +40,33 @@
       </div>
     {% endfor %}
     <script>
-        // Function to fetch indicator data from the API endpoint
-        function fetchIndicator(indicatorName, elementId) {
-            fetch('/api/indicator/' + encodeURIComponent(indicatorName))
-                .then(response => response.json())
-                .then(data => {
-                    if (data.value !== null && data.value !== undefined) {
-                        document.getElementById(elementId).innerText = data.value.toFixed(4);
-                    } else {
-                        document.getElementById(elementId).innerText = data.error || "N/A";
-                    }
-                })
-                .catch(err => console.error("Fetch error:", err));
-        }
-
-        // Initialize the fetch for each indicator on page load
-        function initIndicators() {
-            const elements = document.querySelectorAll('[data-indicator]');
-            elements.forEach(el => {
-                const indicator = el.getAttribute('data-indicator');
-                fetchIndicator(indicator, el.id);
-            });
-        }
-    </script>
-</body>
+      function fetchIndicator(indicatorName, elementId) {
+          fetch('/api/indicator/' + encodeURIComponent(indicatorName))
+              .then(response => {
+                  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                  return response.json();
+              })
+              .then(data => {
+                  const el = document.getElementById(elementId);
+                  if (data.value !== null && data.value !== undefined) {
+                      el.innerText = data.value.toFixed(4);
+                  } else {
+                      el.innerText = data.error || "N/A";
+                  }
+              })
+              .catch(err => {
+                  console.error("Fetch error:", err);
+                  document.getElementById(elementId).innerText = "N/A";
+              });
+      }
+  
+      function initIndicators() {
+          const elements = document.querySelectorAll('[data-indicator]');
+          elements.forEach(el => {
+              const indicator = el.getAttribute('data-indicator');
+              fetchIndicator(indicator, el.id);
+          });
+      }
+  </script>
+  </body>
 </html>
