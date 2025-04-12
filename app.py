@@ -50,9 +50,12 @@ INDICATOR_SOURCES = {
     "UST 2s/10s Curve": ("fred_spread", ("DGS2", "DGS10")),
     "UST 3m/10y Curve": ("fred_spread", ("TB3MS", "DGS10")),
     "30Y Yield": ("fred", "DGS30"),
-    "Stress Composite Score": ("mock_composite", ["DGS2", "DGS10", "DGS30"])
+    "Fed Funds Rate": ("fred", "FEDFUNDS"),
+    "Unemployment Rate": ("fred", "UNRATE"),
+    "CPI (YoY)": ("fred", "CPIAUCSL"),
+    "Retail Sales": ("fred", "RSAFS"),
+    "Stress Composite Score": ("mock_composite", ["DGS2", "DGS10", "DGS30", "FEDFUNDS", "UNRATE"])
 }
-
 
 
 @app.route('/api/indicator/<path:indicator_name>')

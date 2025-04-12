@@ -6,7 +6,11 @@
       "indicators": [
         "UST 2s/10s Curve",
         "UST 3m/10y Curve",
-        "30Y Yield"
+        "30Y Yield",
+        "Fed Funds Rate",
+        "Unemployment Rate",
+        "CPI (YoY)",
+        "Retail Sales"
       ]
     },
     {
