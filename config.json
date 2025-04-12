@@ -1,33 +1,3 @@
-Create a modular, extensible dashboard named "Bottom Sniffer Dashboard" for monitoring financial markets. The dashboard should be configured using JSON and support the following features:
-
-The dashboard will be on a server that has a local IP of 192.168.86.52 and external IP of 96.230.202.72
-
-user uses apache for web server and is good with python.  does not like streamlit
-
-will need to make sure apache is configured properly to point to iamcalledned.ai and the new homepage
-
-website is secure with certbot
-
-user IP home address is iamcalledned.ai
-
-user will need a fun and inviting home page that will link into the market sniffing dashboard we create
-
-
-Organize data into clearly defined categories with lists of indicators under each.
-
-Each indicator should support:
-
-Real-time data feed (e.g., FRED, Yahoo Finance, or market APIs).
-
-Threshold-based alert system (color-coded: green/yellow/red).
-
-Optionally support delta tracking (daily/weekly change).
-
-Include a composite scoring system to reflect overall market stress called "Sniff Score" (range 0–100).
-
-Categories and indicators:
-
-
 {
     "dashboard_name": "Bottom Sniffer Dashboard",
     "categories": [
