@@ -4,9 +4,11 @@
     {
       "category": "Macro Crack Monitors",
       "indicators": [
+        "2-Year Yield",
+        "10-Year Yield",
+        "30Y Yield",
         "UST 2s/10s Curve",
         "UST 3m/10y Curve",
-        "30Y Yield",
         "Fed Funds Rate",
         "Unemployment Rate",
         "CPI (YoY)",

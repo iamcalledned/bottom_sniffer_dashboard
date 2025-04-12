@@ -47,6 +47,8 @@ def get_fred_value(series_id):
 # Mapping of indicator names to data sources
 # For now, only some indicators are mapped. Expand as needed.
 INDICATOR_SOURCES = {
+    "2-Year Yield": ("fred", "DGS2"),
+    "10-Year Yield": ("fred", "DGS10"),
     "UST 2s/10s Curve": ("fred_spread", ("DGS2", "DGS10")),
     "UST 3m/10y Curve": ("fred_spread", ("TB3MS", "DGS10")),
     "30Y Yield": ("fred", "DGS30"),
