@@ -20,26 +20,30 @@
       max-height: 60px;
       width: 100%;
     }
-    /* Improved responsive styling for tabs */
-    @media (max-width: 640px) {
-      .tabs {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem; /* Add spacing between tabs */
-        justify-content: center; /* Center align tabs */
+      /* Improved responsive styling for tabs */
+      @media (max-width: 640px) {
+        .tabs {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.5rem; /* Add spacing between tabs */
+          justify-content: center; /* Center align tabs */
+        }
+        .tab {
+          flex: 1 1 calc(50% - 0.5rem); /* Two tabs per row */
+          text-align: center;
+          padding: 0.75rem; /* Add padding for better touch usability */
+          font-size: 0.9rem; /* Adjust font size for smaller screens */
+          white-space: nowrap; /* Prevent text wrapping */
+          border-radius: 0.5rem; /* Add rounded corners */
+          background-color: var(--base-200); /* Match the theme */
+          color: var(--base-content); /* Ensure text is readable */
+        }
+        .tab-active {
+          background-color: var(--primary); /* Highlight active tab */
+          color: var(--primary-content); /* Ensure contrast for active tab */
+        }
       }
-      .tab {
-        flex: 1 1 calc(50% - 0.5rem); /* Two tabs per row */
-        text-align: center;
-        padding: 0.75rem; /* Add padding for better touch usability */
-        font-size: 0.9rem; /* Adjust font size for smaller screens */
-        white-space: nowrap; /* Prevent text wrapping */
-      }
-      .grid {
-        grid-template-columns: 1fr !important; /* Single column for cards */
-      }
-    }
-  </style>
+    </style>
 </head>
 <body class="bg-neutral text-neutral-content" onload="initIndicators()">
 
