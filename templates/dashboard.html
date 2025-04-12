@@ -1,51 +1,34 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Bottom Sniffer Dashboard</title>
+    <title>{{ config.dashboard_name }}</title>
     <style>
-      /* Basic styling for clarity */
-      body { font-family: Arial, sans-serif; margin: 20px; }
-      .category { margin-bottom: 40px; }
-      .indicator { margin: 10px 0; }
-      .alert { font-weight: bold; }
+      body {
+          font-family: sans-serif;
+          margin: 20px;
+      }
+      .category {
+          margin-bottom: 20px;
+          padding: 10px;
+          border: 1px solid #ccc;
+          border-radius: 5px;
+      }
+      .indicator {
+          margin-left: 20px;
+      }
     </style>
-    <script>
-      // Example: Use JavaScript to asynchronously update indicator values.
-      // You could enhance this section to poll the API and update the UI in real time.
-      function updateIndicator(indicatorName, elementId) {
-        fetch('/api/indicator/' + indicatorName)
-          .then(response => response.json())
-          .then(data => {
-            document.getElementById(elementId).innerHTML = 
-              "Value: " + data.value + " <span class='alert'>" + data.alert + "</span>";
-          })
-          .catch(err => console.error("Error fetching data", err));
-      }
-      // Update a given indicator every 10 seconds.
-      function pollIndicator(indicatorName, elementId) {
-        updateIndicator(indicatorName, elementId);
-        setInterval(() => updateIndicator(indicatorName, elementId), 10000);
-      }
-    </script>
 </head>
 <body>
-    <h1>Bottom Sniffer Dashboard</h1>
-    {% for category in dashboard.categories %}
-    <div class="category">
-        <h2>{{ category.category }}</h2>
-        <ul>
-            {% for indicator in category.indicators %}
-            <li class="indicator">
-                <strong>{{ indicator.name }}</strong> (<em>{{ indicator.data_feed }}</em>) -
-                <span id="{{ indicator.name | replace(' ', '_') }}_value">Loading...</span>
-                <!-- Initialize polling for each indicator -->
-                <script>
-                  pollIndicator("{{ indicator.name }}", "{{ indicator.name | replace(' ', '_') }}_value");
-                </script>
-            </li>
-            {% endfor %}
-        </ul>
-    </div>
+    <h1>{{ config.dashboard_name }}</h1>
+    {% for category in config.categories %}
+      <div class="category">
+          <h2>{{ category.category }}</h2>
+          <ul>
+              {% for indicator in category.indicators %}
+                <li class="indicator">{{ indicator }}</li>
+              {% endfor %}
+          </ul>
+      </div>
     {% endfor %}
 </body>
 </html>

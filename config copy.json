@@ -1,0 +1,80 @@
+{
+    "dashboard_name": "Bottom Sniffer Dashboard",
+    "categories": [
+      {
+        "category": "Market Stress / Panic Indicators",
+        "indicators": [
+          "VIX",
+          "VVIX",
+          "VXTLT",
+          "MOVE Index",
+          "SPX Put/Call Ratio",
+          "Skew Index",
+          "CDX HY Spread",
+          "CDX IG Spread",
+          "HY vs IG Divergence",
+          "SOFR Swap Spreads",
+          "Bid/Ask Spread Widths"
+        ]
+      },
+      {
+        "category": "Liquidity & Flow Indicators",
+        "indicators": [
+          "Goldman HF Net Leverage",
+          "ETF Inflows/Outflows",
+          "S&P MOC Imbalance",
+          "Repo Market Rates",
+          "Dealer Gamma Exposure",
+          "GS Most Short Basket"
+        ]
+      },
+      {
+        "category": "Macro Crack Monitors",
+        "indicators": [
+          "UST 2s/10s Curve",
+          "UST 3m/10y Curve",
+          "30Y Yield",
+          "Dollar Index (DXY)",
+          "USDJPY",
+          "Offshore Yuan (CNH)",
+          "Treasury Bid-to-Cover Ratios"
+        ]
+      },
+      {
+        "category": "Capitulation / Reversal Signals",
+        "indicators": [
+          "NYSE Up/Down Volume Ratio",
+          "SPX % Above 50DMA/200DMA",
+          "AAII Bull-Bear Sentiment",
+          "Put/Call Open Interest Skew",
+          "CTA Trend Model Positioning"
+        ]
+      },
+      {
+        "category": "Trump Pivot / Powell Panic Watch",
+        "indicators": [
+          "Headline Feed Monitor",
+          "Fed Rate Cut Probabilities",
+          "Trump Statement Watch",
+          "Fed Speaker Quotes Tracker"
+        ]
+      },
+      {
+        "category": "Flight to Safety Tracker",
+        "indicators": [
+          "Gold Price",
+          "Bitcoin Price",
+          "USD Basis Swaps",
+          "Foreign CB Treasury Holdings"
+        ]
+      },
+      {
+        "category": "Meta View",
+        "indicators": [
+          "Stress Composite Score",
+          "Sniff Score (0–100)"
+        ]
+      }
+    ]
+  }
+  
