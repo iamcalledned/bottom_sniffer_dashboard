@@ -7,33 +7,26 @@ def load_config():
     with open('config.json', 'r') as f:
         return json.load(f)
 
-# Load configuration at startup
+# Load configuration from the JSON file at startup
 config = load_config()
-
-@app.route('/')
-def home():
-    # Render a fun and inviting homepage using the configuration
-    homepage_config = config.get("server_config", {}).get("homepage", {})
-    return render_template("home.html", homepage=homepage_config)
 
 @app.route('/dashboard')
 def dashboard():
-    # Pass dashboard config to the template for dynamic rendering
+    # Render the dashboard template with your configuration data
     dashboard_config = config.get("dashboard", {})
     return render_template("dashboard.html", dashboard=dashboard_config)
 
-# Example: An API endpoint to update individual indicator data in real-time
 @app.route('/api/indicator/<indicator_name>')
 def get_indicator_data(indicator_name):
-    # In a real implementation, you’d fetch data from your chosen data feeds.
-    # This is a stub example returning a random value.
+    # Replace with real API/data feed integration; this is a dummy implementation.
     import random
     data = {
         "name": indicator_name,
         "value": round(random.uniform(10, 100), 2),
-        "alert": "green"  # You would apply your threshold logic here.
+        "alert": "green"
     }
     return jsonify(data)
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=5000)
+    # Run the Flask app on port 5000 and bind it to localhost only.
+    app.run(host="127.0.0.1", port=5000)
