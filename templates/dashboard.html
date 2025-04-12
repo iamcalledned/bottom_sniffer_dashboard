@@ -141,28 +141,31 @@
     }
   
     function fetchIndicator(indicatorName, elementId) {
-        fetch('/api/indicator/' + encodeURIComponent(indicatorName))
-            .then(res => res.json())
-            .then(data => {
-                const el = document.getElementById(elementId);
-                if (!el) return;
-
-                if (data.value !== null && data.value !== undefined) {
-                    const value = data.value.toFixed(2);
-                    let cls = "text-success";
-                    if (data.value < 0) cls = "text-error";
-                    else if (indicatorName.includes("Unemployment") && data.value > 5) cls = "text-error";
-                    else if (indicatorName.includes("CPI") && data.value > 4) cls = "text-error";
-                    else if (data.value === 0) cls = "text-warning";
-
-                    // Prevent overwriting the composite score
-                    if (indicatorName !== "Stress Composite Score") {
-                        el.innerHTML = `<span class="${cls}">${value}</span>`;
-                    }
-                } else {
-                    el.innerHTML = '<span class="text-warning">N/A</span>';
-                }
-            });
+      fetch('/api/indicator/' + encodeURIComponent(indicatorName))
+        .then(res => res.json())
+        .then(data => {
+          const el = document.getElementById(elementId);
+          if (!el) return;
+    
+          if (data.value !== null && data.value !== undefined) {
+            const value = data.value.toFixed(2);
+            let cls = "text-success";
+            if (data.value < 0) cls = "text-error";
+            else if (indicatorName.includes("Unemployment") && data.value > 5) cls = "text-error";
+            else if (indicatorName.includes("CPI") && data.value > 4) cls = "text-error";
+            else if (data.value === 0) cls = "text-warning";
+    
+            el.innerHTML = `<span class="${cls}">${value}</span>`;
+            if (indicatorName === "Stress Composite Score") updateSniffMeter(data.value);
+            fetch('/api/history/' + encodeURIComponent(indicatorName))
+              .then(res => res.json())
+              .then(hist => {
+                drawSparkline("chart-" + elementId, hist.values.map(v => v.value));
+              });
+          } else {
+            el.innerHTML = '<span class="text-warning">N/A</span>';
+          }
+        });
     }
   
     function initIndicators() {
@@ -202,13 +205,11 @@
     function updateSniffMeter(score) {
       const el = document.getElementById("sniff-meter");
       if (!el) return;
-
       const riskLevel = score > 80 ? "🚨 Crisis / Extreme Risk-Off"
                       : score > 60 ? "⚠️ Risk-Off"
                       : score > 40 ? "😐 Neutral / Caution"
                       : score > 20 ? "😎 Risk-On"
                       : "🌟 Ultra Risk-On";
-
       el.innerText = riskLevel;
     }
 
@@ -218,18 +219,33 @@
             .then(data => {
                 console.log("[DEBUG] API Response:", data);  // Log the API response
                 if (data.composite_score !== undefined) {
+                    // Update Sniff-O-Meter
                     updateSniffMeter(data.composite_score);
-                    const el = document.getElementById("Stress_Composite_Score");
-                    if (el) el.innerText = data.composite_score.toFixed(2);
+
+                    // Update Meta Stress Score
+                    const metaStressScoreEl = document.getElementById("Stress_Composite_Score");
+                    if (metaStressScoreEl) {
+                        metaStressScoreEl.innerHTML = `<span class="text-primary">${data.composite_score.toFixed(2)}</span>`;
+                    }
                 } else {
                     console.error("[DEBUG] Composite score is undefined in API response.");
+                    const metaStressScoreEl = document.getElementById("Stress_Composite_Score");
+                    if (metaStressScoreEl) {
+                        metaStressScoreEl.innerHTML = '<span class="text-warning">N/A</span>';
+                    }
                 }
             })
-            .catch(err => console.error("[DEBUG] Error fetching composite score:", err));
+            .catch(err => {
+                console.error("[DEBUG] Error fetching composite score:", err);
+                const metaStressScoreEl = document.getElementById("Stress_Composite_Score");
+                if (metaStressScoreEl) {
+                    metaStressScoreEl.innerHTML = '<span class="text-warning">N/A</span>';
+                }
+            });
     }
 
     document.addEventListener("DOMContentLoaded", () => {
-      fetchCompositeScore(); // Ensure Sniff-O-Meter and Meta Stress Score are updated on page load
+        fetchCompositeScore(); // Ensure Sniff-O-Meter and Meta Stress Score are updated on page load
     });
 
     function openCompositeDetailModal() {
@@ -241,7 +257,6 @@
       riskLabel.innerText = "";
       riskDescription.innerText = "";
       modal.classList.remove("hidden");
-
       fetch("/api/composite_score")
         .then(res => res.json())
         .then(data => {
@@ -271,7 +286,7 @@
       const modal = document.getElementById("composite-detail-modal");
       modal.classList.add("hidden");
     }
-  
+
     function openDetailModal(indicatorName) {
       const modal = document.getElementById("detail-modal");
       const title = document.getElementById("modal-title");
@@ -281,7 +296,6 @@
       title.innerText = `📈 ${indicatorName}`;
       summary.innerText = "Loading...";
       modal.classList.remove("hidden");
-  
       fetch(`/api/history/${encodeURIComponent(indicatorName)}`)
         .then(res => res.json())
         .then(data => {
@@ -289,13 +303,11 @@
           const start = values[0]?.value;
           const end = values[values.length - 1]?.value;
           const pct = start && end ? (((end - start) / start) * 100).toFixed(2) : null;
-  
+          const ctx = chartCanvas.getContext("2d");
           summary.innerText = pct ? `7-day change: ${pct}%` : "No data available";
   
           const logScale = logScaleIndicators.some(id => indicatorName.includes(id));
-          const ctx = chartCanvas.getContext("2d");
           if (chartCanvas.chart) chartCanvas.chart.destroy();
-  
           chartCanvas.chart = new Chart(ctx, {
             type: 'line',
             data: {
@@ -307,7 +319,7 @@
                 backgroundColor: "rgba(0,206,201,0.2)",
                 fill: true,
                 tension: 0.4,
-                pointRadius: 2
+                pointRadius: 2,
               }]
             },
             options: {
@@ -343,7 +355,7 @@
           });
         });
     }
-  
+
     function closeDetailModal() {
       const modal = document.getElementById("detail-modal");
       modal.classList.add("hidden");
@@ -355,6 +367,4 @@
     }
   </script>
   </body>
-  </html>
-``` 
-
+</html>
