@@ -54,6 +54,7 @@
   <h1>Welcome to <span style="color:#00cec9;">iamcalledned.ai</span></h1>
   <p>Curious about the markets? Let’s sniff out the truth.</p>
   <a class="button" href="/dashboard">🚀 Launch the Market Dashboard</a>
+  <a class="button chat-button" href="#">💬 Chat with Us</a>
 
   <div class="coming-soon">
     More AI-powered tools coming soon...
@@ -100,6 +101,49 @@
   
       // Auto-refresh every 5 seconds
       setInterval(checkServerStatus, 5000);
+    });
+  </script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const chatButton = document.querySelector(".chat-button");
+      const chatMessage = document.createElement("p");
+      chatMessage.style.marginTop = "1rem";
+      chatMessage.style.fontSize = "1rem";
+
+      function checkChatStatus() {
+        fetch("https://iamcalledned.ai/api/status2")
+          .then((response) => {
+            if (response.ok) {
+              chatButton.textContent = "💬 Chat with Us";
+              chatButton.style.backgroundColor = "#0984e3";
+              chatButton.style.cursor = "pointer";
+              chatButton.href = "/chat";
+              chatMessage.textContent = "Chat is online!";
+              chatMessage.style.color = "#0984e3";
+            } else {
+              throw new Error("Chat server not responding");
+            }
+          })
+          .catch(() => {
+            chatButton.textContent = "🚧 Chat Unavailable";
+            chatButton.style.backgroundColor = "#d63031";
+            chatButton.style.cursor = "not-allowed";
+            chatButton.href = "#";
+            chatMessage.textContent = "Please check back later.";
+            chatMessage.style.color = "#d63031";
+          })
+          .finally(() => {
+            if (!chatMessage.parentNode) {
+              chatButton.parentNode.insertBefore(chatMessage, chatButton.nextSibling);
+            }
+          });
+      }
+
+      // Initial check
+      checkChatStatus();
+
+      // Auto-refresh every 5 seconds
+      setInterval(checkChatStatus, 5000);
     });
   </script>
 </body>
