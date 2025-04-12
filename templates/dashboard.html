@@ -207,9 +207,13 @@
       const el = document.getElementById("sniff-meter");
       if (!el) return;
 
-      el.innerText = score > 66 ? "🚨 Risk-Off / Crisis"
-                    : score > 33 ? "😐 Neutral / Volatile"
-                    : "😎 Risk-On";
+      const riskLevel = score > 80 ? "🚨 Crisis / Extreme Risk-Off"
+                      : score > 60 ? "⚠️ Risk-Off"
+                      : score > 40 ? "😐 Neutral / Caution"
+                      : score > 20 ? "😎 Risk-On"
+                      : "🌟 Ultra Risk-On";
+
+      el.innerText = riskLevel;
     }
 
     function fetchCompositeScore() {
@@ -224,6 +228,10 @@
         })
         .catch(err => console.error("Error fetching composite score:", err));
     }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      fetchCompositeScore(); // Ensure Sniff-O-Meter and bottom score are updated on page load
+    });
 
     function openCompositeDetailModal() {
       const modal = document.getElementById("composite-detail-modal");

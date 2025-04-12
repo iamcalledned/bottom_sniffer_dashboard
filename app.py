@@ -215,9 +215,12 @@ def start_background_updaters():
             update_composite_score()
             sleep(fred_cache_ttl_minutes * 60)  # Update composite score periodically
 
+    # Preload data and calculate the composite score at startup
     fetch_fred_series(series_ids)
     prefetch_history()
     update_composite_score()  # Ensure the composite score is calculated at startup
+
+    # Start background threads
     Thread(target=loop_fred, daemon=True).start()
     Thread(target=loop_history, daemon=True).start()
     Thread(target=loop_composite_score, daemon=True).start()
