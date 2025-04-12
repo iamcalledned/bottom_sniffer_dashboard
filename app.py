@@ -47,13 +47,10 @@ def get_fred_value(series_id):
 # Mapping of indicator names to data sources
 # For now, only some indicators are mapped. Expand as needed.
 INDICATOR_SOURCES = {
-    "VIX": ("yahoo", "^VIX"),
-    "VVIX": ("yahoo", "^VVIX"),
-    "Skew Index": ("yahoo", "^SKEW"),
-    "Gold Price": ("yahoo", "GC=F"),
-    "Bitcoin Price": ("yahoo", "BTC-USD"),
-    "Dollar Index (DXY)": ("yahoo", "DX-Y.NYB"),
-    "UST 2s/10s Curve": ("fred_spread", ("DGS2", "DGS10"))
+    "UST 2s/10s Curve": ("fred_spread", ("DGS2", "DGS10")),
+    "UST 3m/10y Curve": ("fred_spread", ("TB3MS", "DGS10")),
+    "30Y Yield": ("fred", "DGS30"),
+    "Stress Composite Score": ("mock_composite", ["DGS2", "DGS10", "DGS30"])
 }
 
 
@@ -61,27 +58,34 @@ INDICATOR_SOURCES = {
 @app.route('/api/indicator/<path:indicator_name>')
 def get_indicator_data(indicator_name):
     indicator_name = unquote(indicator_name)
-
     source_info = INDICATOR_SOURCES.get(indicator_name)
     if not source_info:
         return jsonify({"name": indicator_name, "value": None, "error": "No data source mapped"}), 200
 
     source_type = source_info[0]
-    if source_type == "yahoo":
-        ticker_symbol = source_info[1]
-        price = get_yahoo_price(ticker_symbol)
-        return jsonify({"name": indicator_name, "value": price})
-    elif source_type == "fred_spread":
+
+    if source_type == "fred_spread":
         fred_ids = source_info[1]
-        v2y = get_fred_value(fred_ids[0])
-        v10y = get_fred_value(fred_ids[1])
-        if v2y is not None and v10y is not None:
-            spread = v10y - v2y
+        val1 = get_fred_value(fred_ids[0])
+        val2 = get_fred_value(fred_ids[1])
+        if val1 is not None and val2 is not None:
+            spread = val2 - val1
             return jsonify({"name": indicator_name, "value": spread})
+    
+    elif source_type == "fred":
+        series_id = source_info[1]
+        value = get_fred_value(series_id)
+        return jsonify({"name": indicator_name, "value": value})
+
+    elif source_type == "mock_composite":
+        ids = source_info[1]
+        values = [get_fred_value(i) for i in ids]
+        values = [v for v in values if v is not None]
+        composite = sum(values) / len(values) if values else None
+        return jsonify({"name": indicator_name, "value": composite})
 
     return jsonify({"name": indicator_name, "value": None, "error": "Unhandled source type"})
 
-    return jsonify({"name": indicator_name, "value": None})
 
 @app.route('/dashboard')
 def dashboard():

@@ -2,39 +2,17 @@
   "dashboard_name": "Bottom Sniffer Dashboard",
   "categories": [
     {
-      "category": "Market Stress / Panic Indicators",
-      "indicators": [
-        "VIX",
-        "VVIX",
-        "Skew Index"
-      ]
-    },
-    {
-      "category": "Liquidity & Flow Indicators",
-      "indicators": [
-        "Goldman HF Net Leverage",
-        "ETF Inflows/Outflows"
-      ]
-    },
-    {
       "category": "Macro Crack Monitors",
       "indicators": [
         "UST 2s/10s Curve",
-        "Dollar Index (DXY)"
-      ]
-    },
-    {
-      "category": "Flight to Safety Tracker",
-      "indicators": [
-        "Gold Price",
-        "Bitcoin Price"
+        "UST 3m/10y Curve",
+        "30Y Yield"
       ]
     },
     {
       "category": "Meta View",
       "indicators": [
-        "Stress Composite Score",
-        "Sniff Score (0–100)"
+        "Stress Composite Score"
       ]
     }
   ]
