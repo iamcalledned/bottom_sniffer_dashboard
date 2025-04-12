@@ -21,7 +21,7 @@
       font-size: 1.2rem;
       margin-bottom: 2rem;
     }
-    .button {
+    .button, .chat-button {
       padding: 14px 28px;
       font-size: 1.1rem;
       background-color: #00b894;
@@ -30,8 +30,9 @@
       border-radius: 30px;
       text-decoration: none;
       transition: background-color 0.3s ease;
+      margin: 0.5rem;
     }
-    .button:hover {
+    .button:hover, .chat-button:hover {
       background-color: #01a182;
     }
     .coming-soon {
@@ -54,7 +55,7 @@
   <h1>Welcome to <span style="color:#00cec9;">iamcalledned.ai</span></h1>
   <p>Curious about the markets? Let’s sniff out the truth.</p>
   <a class="button" href="/dashboard">🚀 Launch the Market Dashboard</a>
-  <a class="button chat-button" href="/chat">💬 Chat with Ned</a>
+  <a class="chat-button" href="/chat">💬 Chat with Ned</a>
 
   <div class="coming-soon">
     More AI-powered tools coming soon...
@@ -62,50 +63,46 @@
 
   <script>
     document.addEventListener("DOMContentLoaded", function () {
-      const button = document.querySelector(".button");
-      const message = document.createElement("p");
-      message.style.marginTop = "1rem";
-      message.style.fontSize = "1rem";
-  
+      const dashboardButton = document.querySelector(".button");
+      const dashboardMessage = document.createElement("p");
+      dashboardMessage.style.marginTop = "1rem";
+      dashboardMessage.style.fontSize = "1rem";
+
       function checkServerStatus() {
         fetch("/api/status")
           .then((response) => {
             if (response.ok) {
-              button.textContent = "🚀 Launch the Market Dashboard";
-              button.style.backgroundColor = "#00b894";
-              button.style.cursor = "pointer";
-              button.href = "/dashboard";
-              message.textContent = "Dashboard is online!";
-              message.style.color = "#00b894";
+              dashboardButton.textContent = "🚀 Launch the Market Dashboard";
+              dashboardButton.style.backgroundColor = "#00b894";
+              dashboardButton.style.cursor = "pointer";
+              dashboardButton.href = "/dashboard";
+              dashboardMessage.textContent = "Dashboard is online!";
+              dashboardMessage.style.color = "#00b894";
             } else {
               throw new Error("Server not responding");
             }
           })
           .catch(() => {
-            button.textContent = "🚧 Dashboard Down for Maintenance";
-            button.style.backgroundColor = "#d63031";
-            button.style.cursor = "not-allowed";
-            button.href = "#";
-            message.textContent = "Please check back later.";
-            message.style.color = "#d63031";
+            dashboardButton.textContent = "🚧 Dashboard Down for Maintenance";
+            dashboardButton.style.backgroundColor = "#d63031";
+            dashboardButton.style.cursor = "not-allowed";
+            dashboardButton.href = "#";
+            dashboardMessage.textContent = "Please check back later.";
+            dashboardMessage.style.color = "#d63031";
           })
           .finally(() => {
-            if (!message.parentNode) {
-              button.parentNode.insertBefore(message, button.nextSibling);
+            if (!dashboardMessage.parentNode) {
+              dashboardButton.parentNode.insertBefore(dashboardMessage, dashboardButton.nextSibling);
             }
           });
       }
-  
+
       // Initial check
       checkServerStatus();
-  
+
       // Auto-refresh every 5 seconds
       setInterval(checkServerStatus, 5000);
-    });
-  </script>
 
-  <script>
-    document.addEventListener("DOMContentLoaded", function () {
       const chatButton = document.querySelector(".chat-button");
       const chatMessage = document.createElement("p");
       chatMessage.style.marginTop = "1rem";
