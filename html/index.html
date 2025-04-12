@@ -59,5 +59,35 @@
   <div class="coming-soon">
     More AI-powered tools coming soon...
   </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const button = document.querySelector(".button");
+      const message = document.createElement("p");
+      message.style.marginTop = "1rem";
+      message.style.fontSize = "1rem";
+
+      fetch("/api/status")
+        .then((response) => {
+          if (response.ok) {
+            message.textContent = "Dashboard is online!";
+            message.style.color = "#00b894";
+          } else {
+            throw new Error("Server not responding");
+          }
+        })
+        .catch(() => {
+          button.textContent = "🚧 Dashboard Down for Maintenance";
+          button.style.backgroundColor = "#d63031";
+          button.style.cursor = "not-allowed";
+          button.href = "#";
+          message.textContent = "Please check back later.";
+          message.style.color = "#d63031";
+        })
+        .finally(() => {
+          button.parentNode.insertBefore(message, button.nextSibling);
+        });
+    });
+  </script>
 </body>
 </html>

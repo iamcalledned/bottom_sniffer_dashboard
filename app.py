@@ -168,6 +168,13 @@ def dashboard():
 def home():
     return render_template("home.html")
 
+@app.route("/api/status")
+def server_status():
+    try:
+        # Perform a lightweight check (e.g., return a success message)
+        return jsonify({"status": "ok"}), 200
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 if __name__ == "__main__":
     start_background_updaters()
