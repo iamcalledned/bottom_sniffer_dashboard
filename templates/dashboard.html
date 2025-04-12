@@ -20,15 +20,16 @@
       max-height: 60px;
       width: 100%;
     }
-    /* Add responsive styling for tabs */
+    /* Improved responsive styling for tabs */
     @media (max-width: 640px) {
       .tabs {
         flex-wrap: wrap;
-        gap: 0.5rem; /* Add spacing between tabs */
+        gap: 0.75rem; /* Add more spacing between tabs */
       }
       .tab {
-        flex: 1 1 calc(50% - 0.5rem); /* Two tabs per row */
+        flex: 1 1 100%; /* Make each tab take full width */
         text-align: center;
+        padding: 0.5rem; /* Add padding for better touch usability */
       }
     }
   </style>
@@ -231,6 +232,8 @@ Composite Score =
         const ctx = document.getElementById(canvasId);
         if (!ctx) return;
 
+        console.log(`[DEBUG] Drawing sparkline for ${canvasId} with values:`, values); // Debugging log
+
         new Chart(ctx, {
             type: 'line',
             data: {
@@ -238,7 +241,7 @@ Composite Score =
                 datasets: [{
                     data: values,
                     borderColor: "#7dd3fc",
-                    tension: 0.3, // Smooth the line
+                    tension: 0.4, // Smooth the line
                     borderWidth: 2, // Ensure line is visible
                     fill: false, // Disable area fill
                     pointRadius: 0 // Hide points
@@ -246,7 +249,10 @@ Composite Score =
             },
             options: {
                 plugins: { legend: { display: false } },
-                scales: { x: { display: false }, y: { display: false } },
+                scales: { 
+                    x: { display: false }, 
+                    y: { display: false } 
+                },
                 responsive: true,
                 maintainAspectRatio: false
             }
@@ -419,4 +425,3 @@ Composite Score =
   </script>
   </body>
 </html>
-``` 
