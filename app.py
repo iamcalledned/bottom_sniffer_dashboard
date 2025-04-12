@@ -71,12 +71,13 @@ def calculate_composite_score(data):
     )
 
     # Log the components for debugging
-    print(f"Rates & Curve: {rates_and_curve}, Credit & Volatility: {credit_and_volatility}, "
-          f"Macro Indicators: {macro_indicators}, Flight to Safety: {flight_to_safety}, "
+    print(f"[Composite Score Calculation] Rates & Curve: {rates_and_curve}, "
+          f"Credit & Volatility: {credit_and_volatility}, "
+          f"Macro Indicators: {macro_indicators}, "
+          f"Flight to Safety: {flight_to_safety}, "
           f"Composite Score: {composite_score}")
 
     return round(composite_score, 2)
-
 
 def normalize_rates_and_curve(data):
     two_year = data.get("two_year_yield", 0)
@@ -89,7 +90,14 @@ def normalize_rates_and_curve(data):
     curve_inversion_score = max(0, min(100, (0.5 - ust_2s10s) * 200))  # Penalize near-zero spreads
     rates_score = max(0, min(100, (two_year + ten_year + thirty_year - 10) * 10))  # Penalize high yields
 
-    return (curve_inversion_score + rates_score) / 2
+    normalized_score = (curve_inversion_score + rates_score) / 2
+
+    # Log the inputs and outputs
+    print(f"[Rates & Curve] Inputs: 2Y={two_year}, 10Y={ten_year}, 30Y={thirty_year}, "
+          f"2s10s={ust_2s10s}, 3m10y={ust_3m10y} | "
+          f"Normalized Score: {normalized_score}")
+
+    return normalized_score
 
 
 def normalize_credit_and_volatility(data):
@@ -102,13 +110,17 @@ def normalize_credit_and_volatility(data):
     vix_score = max(0, min(100, (vix - 15) * 4))  # VIX > 35 = 100, VIX < 15 = 0
     move_score = max(0, min(100, (move_index - 100) / 2))  # MOVE > 200 = 100
     credit_spread_score = max(0, min(100, hy_credit_spread * 20))  # Penalize wider spreads
-    return (vix_score + move_score + credit_spread_score + vx_tlt) / 4
+
+    normalized_score = (vix_score + move_score + credit_spread_score + vx_tlt) / 4
+
+    # Log the inputs and outputs
+    print(f"[Credit & Volatility] Inputs: VIX={vix}, MOVE={move_index}, VXTLT={vx_tlt}, "
+          f"HY Spread={hy_credit_spread} | Normalized Score: {normalized_score}")
+
+    return normalized_score
 
 
 def normalize_macro_indicators(data):
-    """
-    Normalize macro indicators (0-100).
-    """
     fed_funds_rate = data.get("fed_funds_rate", 0)
     cpi_yoy = data.get("cpi_yoy", 0)
     unemployment_rate = data.get("unemployment_rate", 0)
@@ -119,13 +131,17 @@ def normalize_macro_indicators(data):
     inflation_score = max(0, min(100, (cpi_yoy - 2) * 50))  # Penalize CPI > 2%
     retail_sales_score = max(0, min(100, 100 - (retail_sales / 10000)))  # Penalize lower sales
 
-    return (inflation_score + unemployment_score + retail_sales_score + fed_funds_rate) / 4
+    normalized_score = (inflation_score + unemployment_score + retail_sales_score + fed_funds_rate) / 4
+
+    # Log the inputs and outputs
+    print(f"[Macro Indicators] Inputs: Fed Funds={fed_funds_rate}, CPI YoY={cpi_yoy}, "
+          f"Unemployment={unemployment_rate}, Retail Sales={retail_sales} | "
+          f"Normalized Score: {normalized_score}")
+
+    return normalized_score
 
 
 def normalize_flight_to_safety(data):
-    """
-    Normalize flight-to-safety metrics (0-100).
-    """
     gold_price = data.get("gold_price", 0)
     bitcoin_price = data.get("bitcoin_price", 0)
     sofr_spread = data.get("sofr_spread", 0)
@@ -134,7 +150,13 @@ def normalize_flight_to_safety(data):
     gold_score = max(0, min(100, (gold_price - 1800) / 2))  # Penalize rising gold > 1800
     bitcoin_score = max(0, min(100, (50000 - bitcoin_price) / 500))  # Penalize falling BTC
 
-    return (gold_score + bitcoin_score) / 2
+    normalized_score = (gold_score + bitcoin_score) / 2
+
+    # Log the inputs and outputs
+    print(f"[Flight to Safety] Inputs: Gold={gold_price}, Bitcoin={bitcoin_price}, "
+          f"SOFR Spread={sofr_spread} | Normalized Score: {normalized_score}")
+
+    return normalized_score
 
 def fetch_fred_series(series_ids):
     now = datetime.utcnow()
