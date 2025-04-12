@@ -20,6 +20,16 @@
       max-height: 60px;
       width: 100%;
     }
+    /* Add responsive styling for tabs */
+    @media (max-width: 640px) {
+      .tabs {
+        flex-wrap: wrap;
+      }
+      .tab {
+        flex: 1 1 100%;
+        text-align: center;
+      }
+    }
   </style>
 </head>
 <body class="bg-neutral text-neutral-content" onload="initIndicators()">
@@ -217,28 +227,29 @@ Composite Score =
     }
   
     function drawSparkline(canvasId, values) {
-      const ctx = document.getElementById(canvasId);
-      if (!ctx) return;
-      new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: values.map((_, i) => i),
-          datasets: [{
-            data: values,
-            borderColor: "#7dd3fc",
-            tension: 0.3,
-            borderWidth: 1,
-            fill: false,
-            pointRadius: 0
-          }]
-        },
-        options: {
-          plugins: { legend: { display: false } },
-          scales: { x: { display: false }, y: { display: false } },
-          responsive: true,
-          maintainAspectRatio: false
-        }
-      });
+        const ctx = document.getElementById(canvasId);
+        if (!ctx) return;
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: values.map((_, i) => i),
+                datasets: [{
+                    data: values,
+                    borderColor: "#7dd3fc",
+                    tension: 0.4, // Smooth the line
+                    borderWidth: 2, // Ensure line is visible
+                    fill: false, // Disable area fill
+                    pointRadius: 0 // Hide points
+                }]
+            },
+            options: {
+                plugins: { legend: { display: false } },
+                scales: { x: { display: false }, y: { display: false } },
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
     }
   
     function updateSniffMeter(score) {
