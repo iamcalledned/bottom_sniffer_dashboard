@@ -4,20 +4,27 @@ from dotenv import load_dotenv
 from fredapi import Fred
 import yfinance as yf
 from urllib.parse import unquote
+from threading import Thread
+from time import sleep
+from datetime import datetime
 import json
 
 app = Flask(__name__)
 
-# Load environment variables
+# Load env and FRED
 load_dotenv()
 FRED_API_KEY = os.getenv("FRED_API_KEY")
 fred = Fred(api_key=FRED_API_KEY)
 
-# Load dashboard config
+# Load UI config
 with open("/home/ned/market_bot/market_monitor/bottom_sniffer_dashboard/config.json", "r") as f:
     config = json.load(f)
 
-# Indicator mapping
+# In-memory cache
+fred_cache = {}
+fred_cache_ttl_minutes = 5
+
+# Map indicators
 INDICATOR_SOURCES = {
     # FRED
     "2-Year Yield": ("fred", "DGS2"),
@@ -30,7 +37,7 @@ INDICATOR_SOURCES = {
     "CPI (YoY)": ("fred_yoy", "CPIAUCSL"),
     "Retail Sales": ("fred", "RSAFS"),
 
-    # Yahoo Finance
+    # Yahoo
     "VIX": ("yahoo", "^VIX"),
     "MOVE Index": ("yahoo", "^MOVE"),
     "VVIX": ("yahoo", "^VVIX"),
@@ -44,9 +51,52 @@ INDICATOR_SOURCES = {
     "USD Index": ("yahoo", "DX-Y.NYB"),
     "Treasury Demand (Bid/Cover)": ("mock", "bidcover"),
 
-    # Composite score
+    # Composite
     "Stress Composite Score": ("mock_composite", ["DGS2", "DGS10", "DGS30", "FEDFUNDS", "UNRATE"])
 }
+
+
+def fetch_fred_series(series_ids):
+    now = datetime.utcnow()
+    for sid in series_ids:
+        try:
+            series = fred.get_series(sid)
+            if sid == "CPIAUCSL" and len(series) >= 13:
+                value = ((series.iloc[-1] - series.iloc[-13]) / series.iloc[-13]) * 100
+            else:
+                value = float(series.iloc[-1])
+
+            fred_cache[sid] = {
+                "value": round(value, 4),
+                "timestamp": now
+            }
+            print(f"[FRED] Cached {sid}: {value}")
+
+        except Exception as e:
+            print(f"[FRED] Error fetching {sid}: {e}")
+
+
+def start_fred_prefetcher():
+    series_ids = set()
+    for src in INDICATOR_SOURCES.values():
+        if src[0] == "fred":
+            series_ids.add(src[1])
+        elif src[0] == "fred_spread":
+            series_ids.update(src[1])
+        elif src[0] == "fred_yoy":
+            series_ids.add(src[1])
+        elif src[0] == "mock_composite":
+            series_ids.update(src[1])
+
+    # First fetch immediately
+    fetch_fred_series(series_ids)
+
+    def loop():
+        while True:
+            fetch_fred_series(series_ids)
+            sleep(fred_cache_ttl_minutes * 60)
+
+    Thread(target=loop, daemon=True).start()
 
 
 @app.route("/api/indicator/<path:indicator_name>")
@@ -61,21 +111,21 @@ def get_indicator_data(indicator_name):
 
     try:
         if source_type == "fred":
-            series = fred.get_series(source_info[1])
-            value = float(series.iloc[-1])
-            return jsonify({"name": indicator_name, "value": round(value, 4)})
+            cached = fred_cache.get(source_info[1])
+            if cached:
+                return jsonify({"name": indicator_name, "value": cached["value"]})
 
         elif source_type == "fred_yoy":
-            series = fred.get_series(source_info[1])
-            if len(series) >= 13:
-                value = ((series.iloc[-1] - series.iloc[-13]) / series.iloc[-13]) * 100
-                return jsonify({"name": indicator_name, "value": round(value, 2)})
+            cached = fred_cache.get(source_info[1])
+            if cached:
+                return jsonify({"name": indicator_name, "value": cached["value"]})
 
         elif source_type == "fred_spread":
             s1, s2 = source_info[1]
-            v1 = fred.get_series(s1).iloc[-1]
-            v2 = fred.get_series(s2).iloc[-1]
-            return jsonify({"name": indicator_name, "value": round(v2 - v1, 4)})
+            v1 = fred_cache.get(s1)
+            v2 = fred_cache.get(s2)
+            if v1 and v2:
+                return jsonify({"name": indicator_name, "value": round(v2["value"] - v1["value"], 4)})
 
         elif source_type == "yahoo":
             ticker = yf.Ticker(source_info[1])
@@ -85,15 +135,13 @@ def get_indicator_data(indicator_name):
                 return jsonify({"name": indicator_name, "value": round(float(latest), 2)})
 
         elif source_type == "mock_composite":
-            values = []
-            for sid in source_info[1]:
-                try:
-                    val = float(fred.get_series(sid).iloc[-1])
-                    values.append(val)
-                except:
-                    continue
-            composite = sum(values) / len(values) if values else None
-            return jsonify({"name": indicator_name, "value": round(composite, 2) if composite else None})
+            values = [
+                fred_cache.get(sid, {}).get("value") for sid in source_info[1]
+            ]
+            values = [v for v in values if v is not None]
+            if values:
+                composite = sum(values) / len(values)
+                return jsonify({"name": indicator_name, "value": round(composite, 2)})
 
         elif source_type == "mock":
             return jsonify({"name": indicator_name, "value": 2.11})
@@ -101,13 +149,16 @@ def get_indicator_data(indicator_name):
     except Exception as e:
         return jsonify({"name": indicator_name, "value": None, "error": str(e)})
 
-    return jsonify({"name": indicator_name, "value": None, "error": "Unknown source type"})
+    return jsonify({"name": indicator_name, "value": None, "error": "Data unavailable"})
 
 
 @app.route("/dashboard")
 def dashboard():
     return render_template("dashboard.html", config=config)
 
+
+# Run setup
+start_fred_prefetcher()
 
 if __name__ == "__main__":
     app.run(host="127.0.0.1", port=5000)
