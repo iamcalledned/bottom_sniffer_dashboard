@@ -11,13 +11,13 @@ import json
 
 app = Flask(__name__)
 
-# Load env and FRED
+# Load .env for FRED key
 load_dotenv()
 FRED_API_KEY = os.getenv("FRED_API_KEY")
 fred = Fred(api_key=FRED_API_KEY)
 
-# Load UI config
-with open("/home/ned/market_bot/market_monitor/bottom_sniffer_dashboard/config.json", "r") as f:
+# Load dashboard config
+with open("config.json", "r") as f:
     config = json.load(f)
 
 fred_cache = {}
@@ -26,7 +26,6 @@ fred_cache_ttl_minutes = 5
 history_cache_ttl_hours = 6
 
 INDICATOR_SOURCES = {
-    # FRED
     "2-Year Yield": ("fred", "DGS2"),
     "10-Year Yield": ("fred", "DGS10"),
     "30Y Yield": ("fred", "DGS30"),
@@ -36,8 +35,6 @@ INDICATOR_SOURCES = {
     "Unemployment Rate": ("fred", "UNRATE"),
     "CPI (YoY)": ("fred_yoy", "CPIAUCSL"),
     "Retail Sales": ("fred", "RSAFS"),
-
-    # Yahoo
     "VIX": ("yahoo", "^VIX"),
     "MOVE Index": ("yahoo", "^MOVE"),
     "VVIX": ("yahoo", "^VVIX"),
@@ -45,13 +42,10 @@ INDICATOR_SOURCES = {
     "HY Spreads": ("fred", "BAMLH0A0HYM2EY"),
     "Skew Index": ("yahoo", "^SKEW"),
     "SOFR Spread": ("fred_spread", ("SOFR", "EFFR")),
-
     "Gold": ("yahoo", "GC=F"),
     "Bitcoin": ("yahoo", "BTC-USD"),
     "USD Index": ("yahoo", "DX-Y.NYB"),
     "Treasury Demand (Bid/Cover)": ("mock", "bidcover"),
-
-    # Composite
     "Stress Composite Score": ("mock_composite", ["DGS2", "DGS10", "DGS30", "FEDFUNDS", "UNRATE"])
 }
 
@@ -65,14 +59,10 @@ def fetch_fred_series(series_ids):
                 value = ((series.iloc[-1] - series.iloc[-13]) / series.iloc[-13]) * 100
             else:
                 value = float(series.iloc[-1])
-
-            fred_cache[sid] = {
-                "value": round(value, 4),
-                "timestamp": now
-            }
-
+            fred_cache[sid] = {"value": round(value, 4), "timestamp": now}
+            print(f"[FRED] Cached {sid}: {value}")
         except Exception as e:
-            print(f"[FRED] Error fetching {sid}: {e}")
+            print(f"[FRED] Error: {sid} - {e}")
 
 
 def prefetch_history():
@@ -82,16 +72,17 @@ def prefetch_history():
                 ticker = yf.Ticker(source[1])
                 hist = ticker.history(period="7d", interval="1d")
                 if not hist.empty:
-                    values = hist['Close'].dropna().tolist()
-                    history_cache[name] = [round(v, 2) for v in values]
-
+                    history_cache[name] = [
+                        {"date": str(idx.date()), "value": round(val, 2)}
+                        for idx, val in hist["Close"].dropna().items()
+                    ]
             elif source[0] in ["fred", "fred_yoy", "fred_spread"]:
                 sid = source[1] if source[0] != "fred_spread" else source[1][1]
-                series = fred.get_series(sid)
-                if series is not None:
-                    values = series.dropna().tail(7).tolist()
-                    history_cache[name] = [round(v, 4) for v in values]
-
+                series = fred.get_series(sid).dropna().tail(7)
+                history_cache[name] = [
+                    {"date": str(date.date()), "value": round(val, 4)}
+                    for date, val in series.items()
+                ]
         except Exception as e:
             print(f"[History] Error for {name}: {e}")
 
@@ -108,21 +99,20 @@ def start_background_updaters():
         elif src[0] == "mock_composite":
             series_ids.update(src[1])
 
-    def update_loop():
+    def loop_fred():
         while True:
             fetch_fred_series(series_ids)
             sleep(fred_cache_ttl_minutes * 60)
 
-    def update_history_loop():
+    def loop_history():
         while True:
             prefetch_history()
             sleep(history_cache_ttl_hours * 3600)
 
     fetch_fred_series(series_ids)
     prefetch_history()
-
-    Thread(target=update_loop, daemon=True).start()
-    Thread(target=update_history_loop, daemon=True).start()
+    Thread(target=loop_fred, daemon=True).start()
+    Thread(target=loop_history, daemon=True).start()
 
 
 @app.route("/api/indicator/<path:indicator_name>")
@@ -131,54 +121,42 @@ def get_indicator_data(indicator_name):
     source_info = INDICATOR_SOURCES.get(indicator_name)
 
     if not source_info:
-        return jsonify({"name": indicator_name, "value": None, "error": "No data source mapped"})
+        return jsonify({"name": indicator_name, "value": None, "error": "No source"})
 
     try:
         if source_info[0] == "fred":
-            cached = fred_cache.get(source_info[1])
-            if cached:
-                return jsonify({"name": indicator_name, "value": cached["value"]})
-
+            return jsonify({"name": indicator_name, "value": fred_cache.get(source_info[1], {}).get("value")})
         elif source_info[0] == "fred_yoy":
-            cached = fred_cache.get(source_info[1])
-            if cached:
-                return jsonify({"name": indicator_name, "value": cached["value"]})
-
-        elif source_type := source_info[0] == "fred_spread":
+            return jsonify({"name": indicator_name, "value": fred_cache.get(source_info[1], {}).get("value")})
+        elif source_info[0] == "fred_spread":
             s1, s2 = source_info[1]
-            v1 = fred_cache.get(s1)
-            v2 = fred_cache.get(s2)
-            if v1 and v2:
-                return jsonify({"name": indicator_name, "value": round(v2["value"] - v1["value"], 4)})
-
+            v1 = fred_cache.get(s1, {}).get("value")
+            v2 = fred_cache.get(s2, {}).get("value")
+            return jsonify({"name": indicator_name, "value": round(v2 - v1, 4)}) if v1 and v2 else jsonify({"value": None})
         elif source_info[0] == "yahoo":
-            ticker = yf.Ticker(source_info[1])
-            data = ticker.history(period="2d")
+            data = yf.Ticker(source_info[1]).history(period="2d")
             if not data.empty:
-                latest = data['Close'].iloc[-1]
-                return jsonify({"name": indicator_name, "value": round(float(latest), 2)})
-
+                return jsonify({"name": indicator_name, "value": round(data['Close'].iloc[-1], 2)})
         elif source_info[0] == "mock_composite":
             values = [fred_cache.get(sid, {}).get("value") for sid in source_info[1]]
             values = [v for v in values if v is not None]
-            if values:
-                composite = sum(values) / len(values)
-                return jsonify({"name": indicator_name, "value": round(composite, 2)})
-
+            avg = sum(values) / len(values) if values else None
+            return jsonify({"name": indicator_name, "value": round(avg, 2) if avg else None})
         elif source_info[0] == "mock":
-            return jsonify({"name": indicator_name, "value": 2.11})
-
+            return jsonify({"name": indicator_name, "value": 1.23})
     except Exception as e:
         return jsonify({"name": indicator_name, "value": None, "error": str(e)})
 
-    return jsonify({"name": indicator_name, "value": None, "error": "Data unavailable"})
+    return jsonify({"name": indicator_name, "value": None})
 
 
 @app.route("/api/history/<path:indicator_name>")
 def get_indicator_history(indicator_name):
     indicator_name = unquote(indicator_name)
-    values = history_cache.get(indicator_name)
-    return jsonify({"name": indicator_name, "values": values or []})
+    return jsonify({
+        "name": indicator_name,
+        "values": history_cache.get(indicator_name, [])
+    })
 
 
 @app.route("/dashboard")
@@ -186,8 +164,11 @@ def dashboard():
     return render_template("dashboard.html", config=config)
 
 
-# Startup
-start_background_updaters()
+@app.route("/")
+def home():
+    return render_template("home.html")
+
 
 if __name__ == "__main__":
+    start_background_updaters()
     app.run(host="127.0.0.1", port=5000)
