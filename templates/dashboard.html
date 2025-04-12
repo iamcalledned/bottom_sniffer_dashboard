@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{ config.dashboard_name }}</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
@@ -23,7 +24,7 @@
 
     <div class="text-center my-4">
       <h2>🔥 Sniff-O-Meter</h2>
-      <div id="sniff-meter" style="font-size: 4rem;">⏳</div>
+      <div id="sniff-meter" style="font-size: 4rem;" title="The lower the score, the chiller the market.">⏳</div>
     </div>
 
     {% for category in config.categories %}
@@ -67,7 +68,7 @@
               cls = "alert-yellow";
             }
 
-            el.innerHTML = `<span class="${cls}">${value}</span>`;
+            el.innerHTML = `<span class="${cls}" title="Latest as of today. Click for history.">${value}</span>`;
 
             if (indicatorName === "Stress Composite Score") {
               updateSniffMeter(data.value);
@@ -97,7 +98,7 @@
       else if (score > 75) el.innerText = "🚨";
       else if (score > 50) el.innerText = "😬";
       else if (score > 30) el.innerText = "😐";
-      else el.innerText = "😎";
+      else el.innerText = "😎🚬";
     }
   </script>
 </body>
