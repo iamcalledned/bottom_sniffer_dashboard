@@ -1,65 +1,52 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{ config.dashboard_name }}</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Bottom Sniffer Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { darkMode: 'class' };
+  </script>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.0.0/dist/full.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" />
   <style>
-    body {
-      background-color: #f8f9fa;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-    .section-title {
-      font-weight: 600;
-      margin-bottom: 0.5rem;
-      border-bottom: 2px solid #dee2e6;
-      padding-bottom: 0.25rem;
-    }
-    .indicator-card {
-      border-radius: 0.75rem;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-      transition: all 0.2s ease-in-out;
-    }
-    .indicator-card:hover {
-      transform: scale(1.02);
-    }
-    .indicator-value {
-      font-size: 2rem;
-      font-weight: bold;
-    }
-    .green { color: #198754; }
-    .yellow { color: #ffc107; }
-    .red { color: #dc3545; }
-    .sniff-meter {
-      font-size: 4rem;
-    }
-    .category-section {
-      margin-top: 2rem;
+    body { font-family: 'Inter', sans-serif; }
+    .fade-in { animation: fadeIn 1s ease-in-out; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
-<body onload="initIndicators()">
-  <div class="container py-5">
-    <h1 class="text-center mb-4">{{ config.dashboard_name }}</h1>
+<body class="bg-neutral text-neutral-content" onload="initIndicators()">
 
-    <div class="text-center mb-5">
-      <h2>🔥 Sniff-O-Meter</h2>
-      <div id="sniff-meter" class="sniff-meter" title="The lower the score, the chiller the market.">⏳</div>
+  <div class="max-w-7xl mx-auto p-4">
+    <div class="text-center mb-10">
+      <h1 class="text-4xl font-bold">Bottom Sniffer Dashboard</h1>
+      <div class="text-sm text-gray-400 mt-2">Updated: <span id="timestamp">{{ now }}</span></div>
     </div>
 
+    <!-- Sniff-O-Meter -->
+    <div class="text-center mb-12">
+      <h2 class="text-2xl font-semibold mb-2">🔥 Sniff-O-Meter</h2>
+      <div id="sniff-meter" class="text-6xl transition-all duration-500">⏳</div>
+    </div>
+
+    <!-- Dashboard Sections -->
     {% for category in config.categories %}
-      <div class="category-section">
-        <h4 class="section-title text-primary">{{ category.category }}</h4>
-        <div class="row">
+      <div class="mb-10">
+        <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+          {% if "Macro" in category.category %}📉{% elif "Stress" in category.category %}🧨{% elif "Flight" in category.category %}💰{% endif %}
+          {{ category.category }}
+        </h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {% for indicator in category.indicators %}
-            <div class="col-md-4 col-lg-3 mb-4">
-              <div class="card indicator-card border-start border-4 border-warning">
-                <div class="card-body">
-                  <h6 class="card-subtitle mb-2 text-muted">{{ indicator }}</h6>
-                  <div class="indicator-value" id="{{ indicator|replace(' ', '_') }}" data-indicator="{{ indicator }}">
-                    <span class="spinner">⏳</span>
-                  </div>
+            <div class="card bg-base-200 shadow-md fade-in">
+              <div class="card-body">
+                <h4 class="card-title text-base-content text-sm">{{ indicator }}</h4>
+                <div id="{{ indicator|replace(' ', '_') }}" class="text-3xl font-bold" data-indicator="{{ indicator }}">
+                  <span class="loading loading-dots loading-md"></span>
                 </div>
               </div>
             </div>
@@ -67,40 +54,43 @@
         </div>
       </div>
     {% endfor %}
+
+    <!-- Meta View -->
+    <div class="mt-16 text-center">
+      <h2 class="text-2xl font-semibold mb-4">Meta Stress Score</h2>
+      <div id="Stress_Composite_Score" class="text-5xl font-extrabold text-primary animate-pulse" data-indicator="Stress Composite Score">⏳</div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="mt-16 text-center text-sm text-gray-500">
+      Data from FRED, Yahoo Finance, and other elite sniffer sources. Built with ❤️ by Sniffer Labs™
+    </footer>
   </div>
 
   <script>
     function fetchIndicator(indicatorName, elementId) {
       fetch('/api/indicator/' + encodeURIComponent(indicatorName))
-        .then(response => response.json())
+        .then(res => res.json())
         .then(data => {
           const el = document.getElementById(elementId);
+          if (!el) return;
           if (data.value !== null && data.value !== undefined) {
-            const value = data.value.toFixed(4);
-            let cls = "green";
+            const value = data.value.toFixed(2);
+            let cls = "text-success";
 
-            if (indicatorName.includes("Curve") && data.value < 0) {
-              cls = "red";
-            } else if (indicatorName.includes("Unemployment") && data.value > 5) {
-              cls = "red";
-            } else if (indicatorName.includes("CPI") && data.value > 4) {
-              cls = "red";
-            } else if (data.value === 0) {
-              cls = "yellow";
-            }
+            if (indicatorName.includes("Curve") && data.value < 0) cls = "text-error";
+            else if (indicatorName.includes("Unemployment") && data.value > 5) cls = "text-error";
+            else if (indicatorName.includes("CPI") && data.value > 4) cls = "text-error";
+            else if (data.value === 0) cls = "text-warning";
 
-            el.innerHTML = `<span class="${cls}" title="Latest as of today. Click for history.">${value}</span>`;
-
-            if (indicatorName === "Stress Composite Score") {
-              updateSniffMeter(data.value);
-            }
+            el.innerHTML = `<span class="${cls}">${value}</span>`;
+            if (indicatorName === "Stress Composite Score") updateSniffMeter(data.value);
           } else {
-            el.innerText = data.error || "N/A";
+            el.innerHTML = '<span class="text-warning">N/A</span>';
           }
         })
-        .catch(err => {
-          console.error("Fetch error:", err);
-          document.getElementById(elementId).innerText = "N/A";
+        .catch(() => {
+          document.getElementById(elementId).innerHTML = '<span class="text-warning">N/A</span>';
         });
     }
 
@@ -110,6 +100,11 @@
         const indicator = el.getAttribute('data-indicator');
         fetchIndicator(indicator, el.id);
       });
+
+      const ts = document.getElementById("timestamp");
+      if (ts) {
+        ts.innerText = new Date().toLocaleString();
+      }
     }
 
     function updateSniffMeter(score) {
