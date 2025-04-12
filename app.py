@@ -5,6 +5,13 @@ import yfinance as yf
 from fredapi import Fred
 from dotenv import load_dotenv
 from urllib.parse import unquote
+from threading import Thread
+from time import sleep
+from datetime import datetime, timedelta
+
+fred_cache = {}
+fred_cache_ttl_minutes = 5
+
 
 app = Flask(__name__)
 
@@ -23,6 +30,37 @@ print("Loaded config:", config)
 # Initialize FRED using the API key from the environment
 fred_api_key = os.environ.get('FRED_API_KEY')
 fred = Fred(api_key=fred_api_key)
+
+def fetch_fred_series(series_ids):
+    global fred_cache
+    now = datetime.utcnow()
+    for series_id in series_ids:
+        try:
+            series = fred.get_series(series_id)
+            if series is not None and len(series) > 0:
+                value = float(series.iloc[-1])
+                fred_cache[series_id] = {
+                    "value": value,
+                    "timestamp": now
+                }
+                print(f"[FRED] Cached {series_id}: {value}")
+        except Exception as e:
+            print(f"[FRED] Error fetching {series_id}: {e}")
+
+def start_fred_prefetcher():
+    series_ids = [
+        "DGS2", "DGS10", "DGS30", "TB3MS",
+        "FEDFUNDS", "UNRATE", "CPIAUCSL", "RSAFS"
+    ]
+    def run_loop():
+        while True:
+            fetch_fred_series(series_ids)
+            sleep(fred_cache_ttl_minutes * 60)
+
+    thread = Thread(target=run_loop)
+    thread.daemon = True
+    thread.start()
+
 
 # Function to fetch the latest price from Yahoo Finance
 def get_yahoo_price(ticker_symbol):
@@ -96,6 +134,6 @@ def get_indicator_data(indicator_name):
 def dashboard():
     # Render the dashboard template, passing the full configuration
     return render_template('dashboard.html', config=config)
-
+start_fred_prefetcher()
 if __name__ == '__main__':
     app.run(host="127.0.0.1", port=5000)
