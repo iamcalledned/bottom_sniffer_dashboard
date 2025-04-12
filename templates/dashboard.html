@@ -6,6 +6,7 @@
   <title>Bottom Sniffer Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
   <link href="https://cdn.jsdelivr.net/npm/daisyui@4.0.0/dist/full.css" rel="stylesheet" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" />
   <style>
@@ -24,30 +25,27 @@
 <body class="bg-neutral text-neutral-content" onload="initIndicators()">
 
   <div class="max-w-7xl mx-auto p-4">
-    <!-- Header -->
     <div class="text-center mb-8">
       <h1 class="text-4xl font-bold">Bottom Sniffer Dashboard</h1>
       <div class="text-sm text-gray-400 mt-2">Updated: <span id="timestamp">⏳</span></div>
     </div>
 
-    <!-- Sniff-O-Meter -->
     <div class="text-center mb-12">
       <h2 class="text-2xl font-semibold mb-2">🔥 Sniff-O-Meter</h2>
       <div id="sniff-meter" class="text-6xl">⏳</div>
     </div>
 
-    <!-- Tabs -->
     <div role="tablist" class="tabs tabs-boxed bg-base-200 mb-6 justify-center">
       <a role="tab" class="tab tab-active" onclick="showTab('macro')">📉 Macro</a>
       <a role="tab" class="tab" onclick="showTab('stress')">🧨 Market Stress</a>
       <a role="tab" class="tab" onclick="showTab('safety')">💰 Flight to Safety</a>
     </div>
 
-    <!-- Tab Panels -->
-    <div id="macro" class="tab-pane fade-in">
-      <h3 class="text-xl font-bold mb-4">Macro Crack Monitors</h3>
+    {% for section in config.categories %}
+    <div id="{{ section.category | replace(' ', '') | lower }}" class="tab-pane fade-in {% if loop.first == false %}hidden{% endif %}">
+      <h3 class="text-xl font-bold mb-4">{{ section.category }}</h3>
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {% for indicator in config.categories[0].indicators %}
+        {% for indicator in section.indicators %}
         <div class="card bg-base-200 shadow-md fade-in">
           <div class="card-body">
             <h4 class="card-title text-sm text-base-content">{{ indicator }}</h4>
@@ -62,74 +60,35 @@
         {% endfor %}
       </div>
     </div>
+    {% endfor %}
 
-    <div id="stress" class="tab-pane hidden fade-in">
-      <h3 class="text-xl font-bold mb-4">Market Stress Indicators</h3>
-      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {% for indicator in config.categories[1].indicators %}
-        <div class="card bg-base-200 shadow-md fade-in">
-          <div class="card-body">
-            <h4 class="card-title text-sm text-base-content">{{ indicator }}</h4>
-            <div id="{{ indicator|replace(' ', '_') }}" class="text-3xl font-bold" data-indicator="{{ indicator }}">
-              <span class="loading loading-dots loading-md"></span>
-            </div>
-            <div onclick="openDetailModal('{{ indicator }}')" style="cursor:pointer;">
-              <canvas class="sparkline mt-2" id="chart-{{ indicator|replace(' ', '_') }}"></canvas>
-            </div>
-          </div>
-        </div>
-        {% endfor %}
-      </div>
-    </div>
-
-    <div id="safety" class="tab-pane hidden fade-in">
-      <h3 class="text-xl font-bold mb-4">Flight to Safety</h3>
-      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {% for indicator in config.categories[2].indicators %}
-        <div class="card bg-base-200 shadow-md fade-in">
-          <div class="card-body">
-            <h4 class="card-title text-sm text-base-content">{{ indicator }}</h4>
-            <div id="{{ indicator|replace(' ', '_') }}" class="text-3xl font-bold" data-indicator="{{ indicator }}">
-              <span class="loading loading-dots loading-md"></span>
-            </div>
-            <div onclick="openDetailModal('{{ indicator }}')" style="cursor:pointer;">
-              <canvas class="sparkline mt-2" id="chart-{{ indicator|replace(' ', '_') }}"></canvas>
-            </div>
-          </div>
-        </div>
-        {% endfor %}
-      </div>
-    </div>
-
-    <!-- Composite Score -->
     <div class="mt-16 text-center">
       <h2 class="text-2xl font-semibold mb-4">Meta Stress Score</h2>
       <div id="Stress_Composite_Score" class="text-5xl font-extrabold text-primary animate-pulse" data-indicator="Stress Composite Score">⏳</div>
     </div>
 
-    <!-- Modal -->
     <div id="detail-modal" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center z-50">
       <div class="bg-base-100 rounded-lg shadow-lg p-6 w-full max-w-3xl relative">
         <button onclick="closeDetailModal()" class="absolute top-2 right-2 text-xl font-bold text-gray-300">✕</button>
         <h3 id="modal-title" class="text-xl font-semibold mb-2">📈 Detail</h3>
         <p id="modal-summary" class="text-sm text-gray-400 mb-4">Summary here</p>
-        <canvas id="modal-chart" height="200"></canvas>
+        <div style="height: 300px;"><canvas id="modal-chart"></canvas></div>
       </div>
     </div>
 
-    <!-- Footer -->
     <footer class="mt-16 text-center text-sm text-gray-500">
       Data from FRED, Yahoo Finance, and deeply sniffed by our bots. Built with ❤️ by Bottom Sniffer Labs™
     </footer>
   </div>
 
   <script>
-    function showTab(tab) {
-      document.querySelectorAll(".tab-pane").forEach(p => p.classList.add("hidden"));
-      document.getElementById(tab).classList.remove("hidden");
+    const logScaleIndicators = ["Bitcoin", "BTC-USD", "VIX", "Gold", "GC=F", "VVIX"];
 
+    function showTab(tabId) {
+      document.querySelectorAll(".tab-pane").forEach(p => p.classList.add("hidden"));
+      document.getElementById(tabId).classList.remove("hidden");
       document.querySelectorAll(".tab").forEach(t => t.classList.remove("tab-active"));
-      document.querySelector(`.tab[onclick="showTab('${tab}')"]`).classList.add("tab-active");
+      document.querySelector(`.tab[onclick="showTab('${tabId}')"]`).classList.add("tab-active");
     }
 
     function fetchIndicator(indicatorName, elementId) {
@@ -143,13 +102,11 @@
             const value = data.value.toFixed(2);
             let cls = "text-success";
             if (data.value < 0) cls = "text-error";
-            else if (indicatorName.includes("Curve") && data.value < 0) cls = "text-error";
             else if (indicatorName.includes("Unemployment") && data.value > 5) cls = "text-error";
             else if (indicatorName.includes("CPI") && data.value > 4) cls = "text-error";
             else if (data.value === 0) cls = "text-warning";
 
             el.innerHTML = `<span class="${cls}">${value}</span>`;
-
             if (indicatorName === "Stress Composite Score") updateSniffMeter(data.value);
 
             fetch('/api/history/' + encodeURIComponent(indicatorName))
@@ -160,17 +117,12 @@
           } else {
             el.innerHTML = '<span class="text-warning">N/A</span>';
           }
-        })
-        .catch(() => {
-          document.getElementById(elementId).innerHTML = '<span class="text-warning">N/A</span>';
         });
     }
 
     function initIndicators() {
-      const elements = document.querySelectorAll('[data-indicator]');
-      elements.forEach(el => {
-        const indicator = el.getAttribute('data-indicator');
-        fetchIndicator(indicator, el.id);
+      document.querySelectorAll('[data-indicator]').forEach(el => {
+        fetchIndicator(el.getAttribute('data-indicator'), el.id);
       });
 
       const ts = document.getElementById("timestamp");
@@ -180,17 +132,12 @@
     function updateSniffMeter(score) {
       const el = document.getElementById("sniff-meter");
       if (!el) return;
-      if (score > 90) el.innerText = "💀";
-      else if (score > 75) el.innerText = "🚨";
-      else if (score > 50) el.innerText = "😬";
-      else if (score > 30) el.innerText = "😐";
-      else el.innerText = "😎🚬";
+      el.innerText = score > 90 ? "💀" : score > 75 ? "🚨" : score > 50 ? "😬" : score > 30 ? "😐" : "😎🚬";
     }
 
     function drawSparkline(canvasId, values) {
       const ctx = document.getElementById(canvasId);
       if (!ctx) return;
-
       new Chart(ctx, {
         type: 'line',
         data: {
@@ -208,8 +155,7 @@
           plugins: { legend: { display: false } },
           scales: { x: { display: false }, y: { display: false } },
           responsive: true,
-          maintainAspectRatio: false,
-          layout: { padding: 0 }
+          maintainAspectRatio: false
         }
       });
     }
@@ -222,7 +168,6 @@
 
       title.innerText = `📈 ${indicatorName}`;
       summary.innerText = "Loading...";
-
       modal.classList.remove("hidden");
 
       fetch(`/api/history/${encodeURIComponent(indicatorName)}`)
@@ -235,7 +180,11 @@
 
           summary.innerText = pct ? `7-day change: ${pct}%` : "No data available";
 
-          new Chart(chartCanvas, {
+          const logScale = logScaleIndicators.some(id => indicatorName.includes(id));
+          const ctx = chartCanvas.getContext("2d");
+          if (chartCanvas.chart) chartCanvas.chart.destroy();
+
+          chartCanvas.chart = new Chart(ctx, {
             type: 'line',
             data: {
               labels: values.map((_, i) => `Day ${i + 1}`),
@@ -250,12 +199,31 @@
               }]
             },
             options: {
-              plugins: { legend: { display: false } },
               responsive: true,
-              maintainAspectRatio: false,
+              maintainAspectRatio: true,
+              aspectRatio: 2,
+              interaction: { mode: 'index', intersect: false },
               scales: {
                 x: { display: false },
-                y: { title: { display: true, text: "Value" } }
+                y: {
+                  type: logScale ? 'logarithmic' : 'linear',
+                  beginAtZero: false,
+                  title: { display: true, text: "Value" },
+                  ticks: {
+                    callback: val => logScale ? Number(val).toLocaleString() : val
+                  }
+                }
+              },
+              plugins: {
+                legend: { display: false },
+                zoom: {
+                  pan: { enabled: true, mode: 'xy' },
+                  zoom: {
+                    wheel: { enabled: true },
+                    pinch: { enabled: true },
+                    mode: 'xy'
+                  }
+                }
               }
             }
           });
@@ -265,15 +233,15 @@
     function closeDetailModal() {
       const modal = document.getElementById("detail-modal");
       modal.classList.add("hidden");
-
       const canvas = document.getElementById("modal-chart");
-      const ctx = canvas.getContext("2d");
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (canvas && canvas.chart) {
+        canvas.chart.destroy();
+        canvas.chart = null;
+      }
     }
 
     function mockChartData() {
-      let data = [];
-      let val = Math.random() * 10 + 2;
+      let data = [], val = Math.random() * 10 + 2;
       for (let i = 0; i < 20; i++) {
         val += Math.random() * 2 - 1;
         data.push(parseFloat(val.toFixed(2)));
