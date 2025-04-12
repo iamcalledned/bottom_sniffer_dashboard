@@ -1,0 +1,110 @@
+Create a modular, extensible dashboard named "Bottom Sniffer Dashboard" for monitoring financial markets. The dashboard should be configured using JSON and support the following features:
+
+The dashboard will be on a server that has a local IP of 192.168.86.52 and external IP of 96.230.202.72
+
+user uses apache for web server and is good with python.  does not like streamlit
+
+will need to make sure apache is configured properly to point to iamcalledned.ai and the new homepage
+
+website is secure with certbot
+
+user IP home address is iamcalledned.ai
+
+user will need a fun and inviting home page that will link into the market sniffing dashboard we create
+
+
+Organize data into clearly defined categories with lists of indicators under each.
+
+Each indicator should support:
+
+Real-time data feed (e.g., FRED, Yahoo Finance, or market APIs).
+
+Threshold-based alert system (color-coded: green/yellow/red).
+
+Optionally support delta tracking (daily/weekly change).
+
+Include a composite scoring system to reflect overall market stress called "Sniff Score" (range 0–100).
+
+Categories and indicators:
+
+
+{
+    "dashboard_name": "Bottom Sniffer Dashboard",
+    "categories": [
+      {
+        "category": "Market Stress / Panic Indicators",
+        "indicators": [
+          "VIX",
+          "VVIX",
+          "VXTLT",
+          "MOVE Index",
+          "SPX Put/Call Ratio",
+          "Skew Index",
+          "CDX HY Spread",
+          "CDX IG Spread",
+          "HY vs IG Divergence",
+          "SOFR Swap Spreads",
+          "Bid/Ask Spread Widths"
+        ]
+      },
+      {
+        "category": "Liquidity & Flow Indicators",
+        "indicators": [
+          "Goldman HF Net Leverage",
+          "ETF Inflows/Outflows",
+          "S&P MOC Imbalance",
+          "Repo Market Rates",
+          "Dealer Gamma Exposure",
+          "GS Most Short Basket"
+        ]
+      },
+      {
+        "category": "Macro Crack Monitors",
+        "indicators": [
+          "UST 2s/10s Curve",
+          "UST 3m/10y Curve",
+          "30Y Yield",
+          "Dollar Index (DXY)",
+          "USDJPY",
+          "Offshore Yuan (CNH)",
+          "Treasury Bid-to-Cover Ratios"
+        ]
+      },
+      {
+        "category": "Capitulation / Reversal Signals",
+        "indicators": [
+          "NYSE Up/Down Volume Ratio",
+          "SPX % Above 50DMA/200DMA",
+          "AAII Bull-Bear Sentiment",
+          "Put/Call Open Interest Skew",
+          "CTA Trend Model Positioning"
+        ]
+      },
+      {
+        "category": "Trump Pivot / Powell Panic Watch",
+        "indicators": [
+          "Headline Feed Monitor",
+          "Fed Rate Cut Probabilities",
+          "Trump Statement Watch",
+          "Fed Speaker Quotes Tracker"
+        ]
+      },
+      {
+        "category": "Flight to Safety Tracker",
+        "indicators": [
+          "Gold Price",
+          "Bitcoin Price",
+          "USD Basis Swaps",
+          "Foreign CB Treasury Holdings"
+        ]
+      },
+      {
+        "category": "Meta View",
+        "indicators": [
+          "Stress Composite Score",
+          "Sniff Score (0–100)"
+        ]
+      }
+    ]
+  }
+  
