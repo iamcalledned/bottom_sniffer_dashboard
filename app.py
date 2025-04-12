@@ -262,7 +262,7 @@ def update_composite_score():
             "macro_indicators": macro_indicators,
             "flight_to_safety": flight_to_safety,
         })
-        print(f"[Composite Score] Updated: {score}")
+        print(f"[DEBUG] Composite Score Updated: {composite_score_cache}")
     except Exception as e:
         print(f"[Composite Score] Error: {e}")
 
@@ -364,26 +364,21 @@ def server_status():
 @app.route("/api/composite_score")
 def get_composite_score():
     try:
-        # Ensure the composite score is up-to-date
         if composite_score_cache["value"] is None:
             update_composite_score()
-
-        if composite_score_cache["value"] is not None:
-            risk_classification = classify_risk_level(composite_score_cache["value"])
-            return jsonify({
-                "composite_score": composite_score_cache["value"],
-                "timestamp": composite_score_cache["timestamp"],
-                "details": {
-                    "rates_and_curve": composite_score_cache.get("rates_and_curve"),
-                    "credit_and_volatility": composite_score_cache.get("credit_and_volatility"),
-                    "macro_indicators": composite_score_cache.get("macro_indicators"),
-                    "flight_to_safety": composite_score_cache.get("flight_to_safety"),
-                },
-                "risk_classification": risk_classification
-            }), 200
-        else:
-            return jsonify({"error": "Composite score not available"}), 500
+        print(f"[DEBUG] Composite Score Cache: {composite_score_cache}")
+        return jsonify({
+            "composite_score": composite_score_cache["value"],
+            "details": {
+                "rates_and_curve": composite_score_cache.get("rates_and_curve"),
+                "credit_and_volatility": composite_score_cache.get("credit_and_volatility"),
+                "macro_indicators": composite_score_cache.get("macro_indicators"),
+                "flight_to_safety": composite_score_cache.get("flight_to_safety"),
+            },
+            "risk_classification": classify_risk_level(composite_score_cache["value"])
+        })
     except Exception as e:
+        print(f"[Composite Score API] Error: {e}")
         return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
