@@ -263,6 +263,39 @@ def update_composite_score():
     except Exception as e:
         print(f"[Composite Score] Error: {e}")
 
+def classify_risk_level(score):
+    """Classify the composite score into a risk level."""
+    if score <= 20:
+        return {
+            "range": "0-20",
+            "label": "Ultra Risk-On",
+            "description": "Markets are in extreme risk appetite mode. Volatility is suppressed, yield curves are normal, credit spreads are tight, and macro indicators are strong. Conditions are historically bullish."
+        }
+    elif score <= 40:
+        return {
+            "range": "21-40",
+            "label": "Risk-On",
+            "description": "Risk appetite is evident. Most indicators suggest stability or optimism. Moderate caution is warranted but conditions favor constructive positioning."
+        }
+    elif score <= 60:
+        return {
+            "range": "41-60",
+            "label": "Neutral / Caution",
+            "description": "Mixed signals. Macro is uncertain, volatility is elevated, and curve signals may be flattening or inverting. This is a no-man’s-land environment; watch for regime shifts."
+        }
+    elif score <= 80:
+        return {
+            "range": "61-80",
+            "label": "Risk-Off",
+            "description": "Volatility and credit spreads are rising, macro indicators are weakening, and safety trades (e.g., gold, short duration) are gaining. Red flags are present across several categories."
+        }
+    else:
+        return {
+            "range": "81-100",
+            "label": "Crisis / Extreme Risk-Off",
+            "description": "Broad-based market stress is underway. Curve inversion, credit dysfunction, macro deterioration, and flight to safety are all flashing at once. This score historically aligns with systemic events or severe drawdowns."
+        }
+
 @app.route("/api/indicator/<path:indicator_name>")
 def get_indicator_data(indicator_name):
     indicator_name = unquote(indicator_name)
@@ -329,6 +362,7 @@ def server_status():
 def get_composite_score():
     try:
         if composite_score_cache["value"] is not None:
+            risk_classification = classify_risk_level(composite_score_cache["value"])
             return jsonify({
                 "composite_score": composite_score_cache["value"],
                 "timestamp": composite_score_cache["timestamp"],
@@ -337,7 +371,8 @@ def get_composite_score():
                     "credit_and_volatility": composite_score_cache.get("credit_and_volatility"),
                     "macro_indicators": composite_score_cache.get("macro_indicators"),
                     "flight_to_safety": composite_score_cache.get("flight_to_safety"),
-                }
+                },
+                "risk_classification": risk_classification
             }), 200
         else:
             return jsonify({"error": "Composite score not available"}), 500

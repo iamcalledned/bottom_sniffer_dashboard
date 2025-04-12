@@ -109,6 +109,11 @@
         <button onclick="closeCompositeDetailModal()" class="absolute top-2 right-2 text-xl font-bold text-gray-300">✕</button>
         <h3 class="text-xl font-semibold mb-4">Composite Score Details</h3>
         <div id="composite-details" class="text-sm text-gray-400">Loading...</div>
+        <div id="risk-classification" class="mt-4 text-left">
+          <h4 class="text-lg font-bold">Risk Classification</h4>
+          <p id="risk-label" class="text-xl font-semibold"></p>
+          <p id="risk-description" class="text-sm text-gray-500"></p>
+        </div>
       </div>
     </div>
 
@@ -223,7 +228,11 @@
     function openCompositeDetailModal() {
       const modal = document.getElementById("composite-detail-modal");
       const details = document.getElementById("composite-details");
+      const riskLabel = document.getElementById("risk-label");
+      const riskDescription = document.getElementById("risk-description");
       details.innerText = "Loading...";
+      riskLabel.innerText = "";
+      riskDescription.innerText = "";
       modal.classList.remove("hidden");
 
       fetch("/api/composite_score")
@@ -239,6 +248,10 @@
               </ul>`;
           } else {
             details.innerText = "No details available.";
+          }
+          if (data.risk_classification) {
+            riskLabel.innerText = data.risk_classification.label;
+            riskDescription.innerText = data.risk_classification.description;
           }
         })
         .catch(err => {
