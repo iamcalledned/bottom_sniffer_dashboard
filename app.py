@@ -50,10 +50,6 @@ INDICATOR_SOURCES = {
 }
 
 def calculate_composite_score(data):
-    """
-    Calculate a composite score (0-100) based on market data and weights.
-    """
-    # Weights for each category
     weights = {
         "rates_and_curve": 0.25,
         "credit_and_volatility": 0.30,
@@ -61,13 +57,11 @@ def calculate_composite_score(data):
         "flight_to_safety": 0.20,
     }
 
-    # Normalized subscores (0-100) for each category
     rates_and_curve = normalize_rates_and_curve(data)
     credit_and_volatility = normalize_credit_and_volatility(data)
     macro_indicators = normalize_macro_indicators(data)
     flight_to_safety = normalize_flight_to_safety(data)
 
-    # Weighted composite score
     composite_score = (
         weights["rates_and_curve"] * rates_and_curve +
         weights["credit_and_volatility"] * credit_and_volatility +
@@ -75,37 +69,36 @@ def calculate_composite_score(data):
         weights["flight_to_safety"] * flight_to_safety
     )
 
+    # Log the components for debugging
+    print(f"Rates & Curve: {rates_and_curve}, Credit & Volatility: {credit_and_volatility}, "
+          f"Macro Indicators: {macro_indicators}, Flight to Safety: {flight_to_safety}, "
+          f"Composite Score: {composite_score}")
+
     return round(composite_score, 2)
 
 
 def normalize_rates_and_curve(data):
-    """
-    Normalize rates and curve inversion metrics (0-100).
-    """
     two_year = data.get("two_year_yield", 0)
     ten_year = data.get("ten_year_yield", 0)
     thirty_year = data.get("thirty_year_yield", 0)
     ust_2s10s = data.get("ust_2s10s_curve", 0)
     ust_3m10y = data.get("ust_3m10y_curve", 0)
 
-    # Example normalization logic
-    curve_inversion_score = max(0, min(100, abs(ust_2s10s) * 10))  # More negative = higher stress
+    # Adjust thresholds for curve inversion
+    curve_inversion_score = max(0, min(100, abs(ust_2s10s) * 20))  # More negative = higher stress
     rates_score = max(0, min(100, (two_year + ten_year + thirty_year) / 3))  # Higher rates = higher stress
 
     return (curve_inversion_score + rates_score) / 2
 
 
 def normalize_credit_and_volatility(data):
-    """
-    Normalize credit and volatility metrics (0-100).
-    """
     vix = data.get("vix", 0)
     move_index = data.get("move_index", 0)
     vx_tlt = data.get("vx_tlt", 0)
     hy_credit_spread = data.get("hy_credit_spread", 0)
 
-    # Example normalization logic
-    vix_score = max(0, min(100, (vix - 15) * 4))  # VIX > 45 = 100, VIX < 15 = 0
+    # Adjust thresholds for VIX and MOVE
+    vix_score = max(0, min(100, (vix - 15) * 5))  # VIX > 35 = 100, VIX < 15 = 0
     move_score = max(0, min(100, move_index / 2))  # MOVE > 200 = 100
     credit_spread_score = max(0, min(100, hy_credit_spread * 10))  # Higher spreads = higher stress
 
