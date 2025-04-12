@@ -3,8 +3,12 @@ import os
 from flask import Flask, render_template, jsonify
 import yfinance as yf
 from fredapi import Fred
+from dotenv import load_dotenv
 
 app = Flask(__name__)
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Load the configuration file from the specified path
 def load_config():
@@ -15,22 +19,21 @@ def load_config():
 config = load_config()
 print("Loaded config:", config)
 
-# Initialize FRED API (make sure to set your FRED_API_KEY in your environment)
-fred_api_key = os.environ.get('FRED_API_KEY', '<YOUR_FRED_API_KEY>')
+# Initialize FRED API with the API key from the environment variable
+fred_api_key = os.environ.get('FRED_API_KEY')
 fred = Fred(api_key=fred_api_key)
 
-# Example function to fetch the latest price from Yahoo Finance
+# Function to fetch the latest price from Yahoo Finance
 def get_yahoo_price(ticker_symbol):
     try:
         data = yf.download(ticker_symbol, period="1d", interval="1d")
         if not data.empty:
-            # Get the last closing price
             return float(data['Close'].iloc[-1])
     except Exception as e:
         print(f"Error fetching {ticker_symbol} from Yahoo Finance: {e}")
     return None
 
-# Example function to fetch the latest value from FRED
+# Function to fetch the latest value from FRED
 def get_fred_value(series_id):
     try:
         series = fred.get_series(series_id)
