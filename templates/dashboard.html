@@ -58,12 +58,15 @@
       <div id="sniff-meter" class="text-6xl">⏳</div>
     </div>
 
-    <div role="tablist" class="tabs tabs-boxed bg-base-200 mb-6 justify-center">
-      <a role="tab" class="tab tab-active" onclick="showTab('macro')">📉 Macro</a>
-      <a role="tab" class="tab" onclick="showTab('stress')">🧨 Market Stress</a>
-      <a role="tab" class="tab" onclick="showTab('safety')">💰 Flight to Safety</a>
-      <a role="tab" class="tab" onclick="showTab('methodology')">📘 Methodology</a>
-    </div>
+  <!-- Mobile-Optimized Tabs -->
+  <div role="tablist" class="flex flex-nowrap overflow-x-auto space-x-2 mb-6 px-2 sm:justify-center">
+    <button class="tab tab-active px-4 py-2 bg-base-200 rounded-md whitespace-nowrap" onclick="showTab('macro')">📉 Macro</button>
+    <button class="tab px-4 py-2 bg-base-200 rounded-md whitespace-nowrap" onclick="showTab('stress')">🧨 Market Stress</button>
+    <button class="tab px-4 py-2 bg-base-200 rounded-md whitespace-nowrap" onclick="showTab('safety')">💰 Flight to Safety</button>
+    <button class="tab px-4 py-2 bg-base-200 rounded-md whitespace-nowrap" onclick="showTab('methodology')">📘 Methodology</button>
+  </div>
+
+
 
     <div id="macro" class="tab-pane fade-in">
       <h3 class="text-xl font-bold mb-4">Macro Crack Monitors</h3>
