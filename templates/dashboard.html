@@ -24,18 +24,21 @@
     @media (max-width: 640px) {
       .tabs {
         flex-wrap: wrap;
-        gap: 1rem; /* Add more spacing between tabs */
+        gap: 0.5rem; /* Adjust spacing between tabs */
       }
       .tab {
-        flex: 1 1 calc(50% - 1rem); /* Two tabs per row */
+        flex: 1 1 calc(50% - 0.5rem); /* Two tabs per row */
         text-align: center;
-        padding: 0.75rem; /* Add padding for better touch usability */
-        font-size: 0.9rem; /* Adjust font size for smaller screens */
+        padding: 0.5rem; /* Adjust padding for better usability */
+        font-size: 0.85rem; /* Slightly smaller font size */
+      }
+      .grid {
+        grid-template-columns: 1fr !important; /* Single column for cards */
       }
     }
   </style>
 </head>
-<body class="bg-neutral text-neutral-content" onload="initIndicators()"></body>
+<body class="bg-neutral text-neutral-content" onload="initIndicators()">
 
   <div class="max-w-7xl mx-auto p-4">
     <div class="text-center mb-8">
@@ -448,4 +451,3 @@ Composite Score =
   </script>
   </body>
 </html>
-``` 
