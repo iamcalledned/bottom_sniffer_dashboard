@@ -115,6 +115,15 @@ async def get_session_data(request: Request):
     return JSONResponse(content=json.loads(data))
 
 
+@app.get("/api/status2")
+async def server_status2():
+    try:
+        # Perform a lightweight check (e.g., return a success message)
+        return JSONResponse(content={"status": "ok"}, status_code=200)
+    except Exception as e:
+        return JSONResponse(content={"status": "error", "message": str(e)}, status_code=500)
+
+
 # Token Validation
 async def validate_token(id_token: str):
     jwks_url = f"https://cognito-idp.us-east-1.amazonaws.com/{COGNITO_USER_POOL_ID}/.well-known/jwks.json"
