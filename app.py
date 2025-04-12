@@ -177,6 +177,7 @@ def prefetch_history():
                         {"date": str(idx.date()), "value": round(val, 2)}
                         for idx, val in hist["Close"].dropna().items()
                     ]
+                    print(f"[DEBUG] History cached for {name}: {history_cache[name]}")  # Debug log
             elif source[0] in ["fred", "fred_yoy", "fred_spread"]:
                 sid = source[1] if source[0] != "fred_spread" else source[1][1]
                 series = fred.get_series(sid).dropna().tail(7)
@@ -184,6 +185,7 @@ def prefetch_history():
                     {"date": str(date.date()), "value": round(val, 4)}
                     for date, val in series.items()
                 ]
+                print(f"[DEBUG] History cached for {name}: {history_cache[name]}")  # Debug log
         except Exception as e:
             print(f"[History] Error for {name}: {e}")
 
