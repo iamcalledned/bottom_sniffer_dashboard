@@ -67,7 +67,7 @@
       message.style.fontSize = "1rem";
   
       function checkServerStatus() {
-        fetch("/api/status")
+        fetch("https://iamcalledned.ai/api/status")
           .then((response) => {
             if (response.ok) {
               button.textContent = "🚀 Launch the Market Dashboard";
