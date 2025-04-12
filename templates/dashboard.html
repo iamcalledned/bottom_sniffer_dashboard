@@ -141,32 +141,28 @@
     }
   
     function fetchIndicator(indicatorName, elementId) {
-      fetch('/api/indicator/' + encodeURIComponent(indicatorName))
-        .then(res => res.json())
-        .then(data => {
-          const el = document.getElementById(elementId);
-          if (!el) return;
-    
-          if (data.value !== null && data.value !== undefined) {
-            const value = data.value.toFixed(2);
-            let cls = "text-success";
-            if (data.value < 0) cls = "text-error";
-            else if (indicatorName.includes("Unemployment") && data.value > 5) cls = "text-error";
-            else if (indicatorName.includes("CPI") && data.value > 4) cls = "text-error";
-            else if (data.value === 0) cls = "text-warning";
-    
-            el.innerHTML = `<span class="${cls}">${value}</span>`;
-            if (indicatorName === "Stress Composite Score") updateSniffMeter(data.value);
-    
-            fetch('/api/history/' + encodeURIComponent(indicatorName))
-              .then(res => res.json())
-              .then(hist => {
-                drawSparkline("chart-" + elementId, hist.values.map(v => v.value));
-              });
-          } else {
-            el.innerHTML = '<span class="text-warning">N/A</span>';
-          }
-        });
+        fetch('/api/indicator/' + encodeURIComponent(indicatorName))
+            .then(res => res.json())
+            .then(data => {
+                const el = document.getElementById(elementId);
+                if (!el) return;
+
+                if (data.value !== null && data.value !== undefined) {
+                    const value = data.value.toFixed(2);
+                    let cls = "text-success";
+                    if (data.value < 0) cls = "text-error";
+                    else if (indicatorName.includes("Unemployment") && data.value > 5) cls = "text-error";
+                    else if (indicatorName.includes("CPI") && data.value > 4) cls = "text-error";
+                    else if (data.value === 0) cls = "text-warning";
+
+                    // Prevent overwriting the composite score
+                    if (indicatorName !== "Stress Composite Score") {
+                        el.innerHTML = `<span class="${cls}">${value}</span>`;
+                    }
+                } else {
+                    el.innerHTML = '<span class="text-warning">N/A</span>';
+                }
+            });
     }
   
     function initIndicators() {
@@ -360,4 +356,5 @@
   </script>
   </body>
   </html>
+``` 
 

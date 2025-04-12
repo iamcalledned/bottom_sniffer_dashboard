@@ -308,7 +308,10 @@ def get_indicator_data(indicator_name):
         return jsonify({"name": indicator_name, "value": None, "error": "No source"})
 
     try:
-        if source_info[0] == "fred":
+        if indicator_name == "Stress Composite Score":
+            # Redirect to the composite score API
+            return get_composite_score()
+        elif source_info[0] == "fred":
             return jsonify({"name": indicator_name, "value": fred_cache.get(source_info[1], {}).get("value")})
         elif source_info[0] == "fred_yoy":
             return jsonify({"name": indicator_name, "value": fred_cache.get(source_info[1], {}).get("value")})
