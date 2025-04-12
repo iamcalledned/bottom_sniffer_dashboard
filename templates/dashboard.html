@@ -39,6 +39,7 @@
       <a role="tab" class="tab tab-active" onclick="showTab('macro')">📉 Macro</a>
       <a role="tab" class="tab" onclick="showTab('stress')">🧨 Market Stress</a>
       <a role="tab" class="tab" onclick="showTab('safety')">💰 Flight to Safety</a>
+      <a role="tab" class="tab" onclick="showTab('methodology')">📘 Methodology</a>
     </div>
 
     <div id="macro" class="tab-pane fade-in">
@@ -96,6 +97,47 @@
         </div>
         {% endfor %}
       </div>
+    </div>
+
+    <div id="methodology" class="tab-pane hidden fade-in">
+      <h3 class="text-xl font-bold mb-4">Market Stress Score: Methodology</h3>
+      <p class="mb-4">
+        Our Composite Market Score is a real-time "sniff test" for the overall risk environment. It condenses multiple indicators into a single number from 0 to 100:
+      </p>
+      <ul class="list-disc list-inside mb-4">
+        <li><strong>0–20:</strong> Ultra Risk-On (euphoria)</li>
+        <li><strong>21–40:</strong> Risk-On (optimism)</li>
+        <li><strong>41–60:</strong> Neutral / Mixed Signals</li>
+        <li><strong>61–80:</strong> Risk-Off (stress rising)</li>
+        <li><strong>81–100:</strong> Crisis (get your helmet)</li>
+      </ul>
+      <h4 class="text-lg font-semibold mb-2">🔍 What Goes Into the Score?</h4>
+      <p class="mb-4">
+        We monitor four major areas of the financial system:
+      </p>
+      <ul class="list-disc list-inside mb-4">
+        <li><strong>Interest Rates & Yield Curves (15%):</strong> We track short and long-term Treasury yields and the shape of the yield curve. Inverted or flat curves are a red flag for recession risk.</li>
+        <li><strong>Credit Risk & Volatility (40%):</strong> We use market indicators like the VIX, MOVE Index, and high-yield credit spreads to assess fear and financial stress.</li>
+        <li><strong>Macro Health (25%):</strong> Economic data like unemployment, inflation, and retail sales help gauge whether the economy is cruising or sputtering.</li>
+        <li><strong>Flight to Safety (20%):</strong> We watch where investors are parking their money — like gold or Bitcoin — to see if they’re bracing for impact.</li>
+      </ul>
+      <p class="mb-4">
+        Each input is normalized to a 0–100 range based on historical stress levels. Then we apply weighted averages to create the final score.
+      </p>
+      <h4 class="text-lg font-semibold mb-2">Want More Details?</h4>
+      <p class="mb-4">
+        If you’re into formulas and data, here’s the math behind it:
+      </p>
+      <pre class="bg-base-200 p-4 rounded-lg text-sm mb-4">
+Composite Score =
+(0.15 × Rates & Curve) +
+(0.40 × Credit & Volatility) +
+(0.25 × Macro Indicators) +
+(0.20 × Safe-Haven Demand)
+      </pre>
+      <p>
+        This dashboard is built to be a real-time market weathervane, not a crystal ball. Use it to stay aware, not to make trades on its own.
+      </p>
     </div>
 
     <div class="mt-16 text-center">
