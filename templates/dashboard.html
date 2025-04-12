@@ -221,9 +221,16 @@
         .then(res => res.json())
         .then(data => {
           if (data.composite_score !== undefined) {
+            // Update Sniff-O-Meter
             updateSniffMeter(data.composite_score);
+
+            // Update Meta Stress Score
             const el = document.getElementById("Stress_Composite_Score");
             if (el) el.innerText = data.composite_score.toFixed(2);
+
+            // Log details for debugging
+            console.log("Composite Score Details:", data.details);
+            console.log("Risk Classification:", data.risk_classification);
           }
         })
         .catch(err => console.error("Error fetching composite score:", err));

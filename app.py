@@ -364,6 +364,10 @@ def server_status():
 @app.route("/api/composite_score")
 def get_composite_score():
     try:
+        # Ensure the composite score is up-to-date
+        if composite_score_cache["value"] is None:
+            update_composite_score()
+
         if composite_score_cache["value"] is not None:
             risk_classification = classify_risk_level(composite_score_cache["value"])
             return jsonify({
