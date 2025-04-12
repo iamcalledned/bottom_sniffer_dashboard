@@ -6,39 +6,60 @@
   <title>{{ config.dashboard_name }}</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
-    .spinner {
-      animation: blink 1s step-start infinite;
-      color: #aaa;
+    body {
+      background-color: #f8f9fa;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
-    @keyframes blink {
-      50% { opacity: 0; }
+    .section-title {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      border-bottom: 2px solid #dee2e6;
+      padding-bottom: 0.25rem;
     }
-    .alert-green { color: #198754; font-weight: bold; }
-    .alert-yellow { color: #ffc107; font-weight: bold; }
-    .alert-red { color: #dc3545; font-weight: bold; }
+    .indicator-card {
+      border-radius: 0.75rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      transition: all 0.2s ease-in-out;
+    }
+    .indicator-card:hover {
+      transform: scale(1.02);
+    }
+    .indicator-value {
+      font-size: 2rem;
+      font-weight: bold;
+    }
+    .green { color: #198754; }
+    .yellow { color: #ffc107; }
+    .red { color: #dc3545; }
+    .sniff-meter {
+      font-size: 4rem;
+    }
+    .category-section {
+      margin-top: 2rem;
+    }
   </style>
 </head>
 <body onload="initIndicators()">
-  <div class="container mt-4">
-    <h1 class="mb-4 text-center">{{ config.dashboard_name }}</h1>
+  <div class="container py-5">
+    <h1 class="text-center mb-4">{{ config.dashboard_name }}</h1>
 
-    <div class="text-center my-4">
+    <div class="text-center mb-5">
       <h2>🔥 Sniff-O-Meter</h2>
-      <div id="sniff-meter" style="font-size: 4rem;" title="The lower the score, the chiller the market.">⏳</div>
+      <div id="sniff-meter" class="sniff-meter" title="The lower the score, the chiller the market.">⏳</div>
     </div>
 
     {% for category in config.categories %}
-      <div class="mb-5">
-        <h3 class="text-primary border-bottom pb-1">{{ category.category }}</h3>
+      <div class="category-section">
+        <h4 class="section-title text-primary">{{ category.category }}</h4>
         <div class="row">
           {% for indicator in category.indicators %}
-            <div class="col-md-4 mb-3">
-              <div class="card shadow-sm border-start border-5 border-warning">
+            <div class="col-md-4 col-lg-3 mb-4">
+              <div class="card indicator-card border-start border-4 border-warning">
                 <div class="card-body">
-                  <h5 class="card-title">{{ indicator }}</h5>
-                  <p class="card-text display-6" id="{{ indicator|replace(' ', '_') }}" data-indicator="{{ indicator }}">
+                  <h6 class="card-subtitle mb-2 text-muted">{{ indicator }}</h6>
+                  <div class="indicator-value" id="{{ indicator|replace(' ', '_') }}" data-indicator="{{ indicator }}">
                     <span class="spinner">⏳</span>
-                  </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -56,16 +77,16 @@
           const el = document.getElementById(elementId);
           if (data.value !== null && data.value !== undefined) {
             const value = data.value.toFixed(4);
-            let cls = "alert-green";
+            let cls = "green";
 
             if (indicatorName.includes("Curve") && data.value < 0) {
-              cls = "alert-red";
+              cls = "red";
             } else if (indicatorName.includes("Unemployment") && data.value > 5) {
-              cls = "alert-red";
+              cls = "red";
             } else if (indicatorName.includes("CPI") && data.value > 4) {
-              cls = "alert-red";
+              cls = "red";
             } else if (data.value === 0) {
-              cls = "alert-yellow";
+              cls = "yellow";
             }
 
             el.innerHTML = `<span class="${cls}" title="Latest as of today. Click for history.">${value}</span>`;
@@ -98,7 +119,7 @@
       else if (score > 75) el.innerText = "🚨";
       else if (score > 50) el.innerText = "😬";
       else if (score > 30) el.innerText = "😐";
-      else el.innerText = "😎💨";
+      else el.innerText = "😎🚬";
     }
   </script>
 </body>
