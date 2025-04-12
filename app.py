@@ -53,12 +53,11 @@ INDICATOR_SOURCES = {
 
 def calculate_composite_score(data):
     weights = {
-        "rates_and_curve": 0.25,
-        "credit_and_volatility": 0.30,
+        "rates_and_curve": 0.20,  # Reduced weight
+        "credit_and_volatility": 0.35,  # Increased weight
         "macro_indicators": 0.25,
         "flight_to_safety": 0.20,
     }
-
     rates_and_curve = normalize_rates_and_curve(data)
     credit_and_volatility = normalize_credit_and_volatility(data)
     macro_indicators = normalize_macro_indicators(data)
@@ -87,8 +86,8 @@ def normalize_rates_and_curve(data):
     ust_3m10y = data.get("ust_3m10y_curve", 0)
 
     # Adjust thresholds for curve inversion
-    curve_inversion_score = max(0, min(100, abs(ust_2s10s) * 20))  # More negative = higher stress
-    rates_score = max(0, min(100, (two_year + ten_year + thirty_year) / 3))  # Higher rates = higher stress
+    curve_inversion_score = max(0, min(100, (0.5 - ust_2s10s) * 200))  # Penalize near-zero spreads
+    rates_score = max(0, min(100, (two_year + ten_year + thirty_year - 10) * 10))  # Penalize high yields
 
     return (curve_inversion_score + rates_score) / 2
 
@@ -100,10 +99,9 @@ def normalize_credit_and_volatility(data):
     hy_credit_spread = data.get("hy_credit_spread", 0)
 
     # Adjust thresholds for VIX and MOVE
-    vix_score = max(0, min(100, (vix - 15) * 5))  # VIX > 35 = 100, VIX < 15 = 0
-    move_score = max(0, min(100, move_index / 2))  # MOVE > 200 = 100
-    credit_spread_score = max(0, min(100, hy_credit_spread * 10))  # Higher spreads = higher stress
-
+    vix_score = max(0, min(100, (vix - 15) * 4))  # VIX > 35 = 100, VIX < 15 = 0
+    move_score = max(0, min(100, (move_index - 100) / 2))  # MOVE > 200 = 100
+    credit_spread_score = max(0, min(100, hy_credit_spread * 20))  # Penalize wider spreads
     return (vix_score + move_score + credit_spread_score + vx_tlt) / 4
 
 
@@ -117,9 +115,9 @@ def normalize_macro_indicators(data):
     retail_sales = data.get("retail_sales", 0)
 
     # Example normalization logic
-    inflation_score = max(0, min(100, (cpi_yoy - 2) * 10))  # CPI > 6 = 100, CPI < 2 = 0
-    unemployment_score = max(0, min(100, (unemployment_rate - 3) * 20))  # Unemployment > 8 = 100
-    retail_sales_score = max(0, min(100, 100 - retail_sales))  # Lower retail sales = higher stress
+    unemployment_score = max(0, min(100, (unemployment_rate - 3) * 25))  # Penalize unemployment > 3%
+    inflation_score = max(0, min(100, (cpi_yoy - 2) * 50))  # Penalize CPI > 2%
+    retail_sales_score = max(0, min(100, 100 - (retail_sales / 10000)))  # Penalize lower sales
 
     return (inflation_score + unemployment_score + retail_sales_score + fed_funds_rate) / 4
 
@@ -133,11 +131,10 @@ def normalize_flight_to_safety(data):
     sofr_spread = data.get("sofr_spread", 0)
 
     # Example normalization logic
-    gold_score = max(0, min(100, (gold_price - 1500) / 10))  # Gold > 2000 = 100
-    bitcoin_score = max(0, min(100, (50000 - bitcoin_price) / 500))  # Lower BTC = higher stress
-    sofr_score = max(0, min(100, sofr_spread * 10))  # Higher SOFR spread = higher stress
+    gold_score = max(0, min(100, (gold_price - 1800) / 2))  # Penalize rising gold > 1800
+    bitcoin_score = max(0, min(100, (50000 - bitcoin_price) / 500))  # Penalize falling BTC
 
-    return (gold_score + bitcoin_score + sofr_score) / 3
+    return (gold_score + bitcoin_score) / 2
 
 def fetch_fred_series(series_ids):
     now = datetime.utcnow()
