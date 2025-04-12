@@ -7,19 +7,19 @@ from dotenv import load_dotenv
 
 app = Flask(__name__)
 
-# Load environment variables from .env file
+# Load environment variables from the .env file
 load_dotenv()
 
-# Load the configuration file from the specified path
+# Function to load configuration from config.json
 def load_config():
     with open(r'/home/ned/market_bot/market_monitor/bottom_sniffer_dashboard/config.json', 'r') as f:
         return json.load(f)
 
-# Load config at startup
+# Load the configuration at startup
 config = load_config()
 print("Loaded config:", config)
 
-# Initialize FRED API with the API key from the environment variable
+# Initialize FRED using the API key from the environment
 fred_api_key = os.environ.get('FRED_API_KEY')
 fred = Fred(api_key=fred_api_key)
 
@@ -33,7 +33,7 @@ def get_yahoo_price(ticker_symbol):
         print(f"Error fetching {ticker_symbol} from Yahoo Finance: {e}")
     return None
 
-# Function to fetch the latest value from FRED
+# Function to fetch the latest value from a FRED series
 def get_fred_value(series_id):
     try:
         series = fred.get_series(series_id)
@@ -43,15 +43,17 @@ def get_fred_value(series_id):
         print(f"Error fetching {series_id} from FRED: {e}")
     return None
 
-# Mapping of indicator names to data sources and corresponding ticker or series IDs
+# Mapping of indicator names to data sources
+# For now, only some indicators are mapped. Expand as needed.
 INDICATOR_SOURCES = {
     "VIX": ("yahoo", "^VIX"),
+    "VVIX": ("yahoo", "^VVIX"),
     "Skew Index": ("yahoo", "^SKEW"),
     "Gold Price": ("yahoo", "GC=F"),
     "Bitcoin Price": ("yahoo", "BTC-USD"),
     "Dollar Index (DXY)": ("yahoo", "DX-Y.NYB"),
     "UST 2s/10s Curve": ("fred_spread", ("DGS2", "DGS10"))
-    # Add more mappings as needed...
+    # Additional mappings can be added here
 }
 
 @app.route('/api/indicator/<indicator_name>')
@@ -76,12 +78,11 @@ def get_indicator_data(indicator_name):
         if v2y is not None and v10y is not None:
             spread = v10y - v2y
             return jsonify({"name": indicator_name, "value": spread})
-    # Fallback if nothing matches
     return jsonify({"name": indicator_name, "value": None})
 
 @app.route('/dashboard')
 def dashboard():
-    # Render the dashboard template, passing the full config to it
+    # Render the dashboard template, passing the full configuration
     return render_template('dashboard.html', config=config)
 
 if __name__ == '__main__':
