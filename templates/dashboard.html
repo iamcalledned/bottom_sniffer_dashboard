@@ -127,7 +127,7 @@
     </div>
 
     <footer class="mt-16 text-center text-sm text-gray-500">
-      Data from FRED, Yahoo Finance, and deeply sniffed by our bots. Built with ❤️ by Bottom Sniffer Labs™
+      Data from FRED, Yahoo Finance, and deeply sniffed by our bots. Built by Ned
     </footer>
   </div>
   <script>
@@ -222,13 +222,13 @@
                     // Update Meta Stress Score
                     const metaStressScoreEl = document.getElementById("Stress_Composite_Score");
                     if (metaStressScoreEl) {
-                        metaStressScoreEl.innerHTML = `<span class="text-primary">${data.composite_score.toFixed(2)}</span>`;
+                        metaStressScoreEl.innerText = data.composite_score.toFixed(2); // Use the same value
                     }
                 } else {
                     console.error("[DEBUG] Composite score is undefined in API response.");
                     const metaStressScoreEl = document.getElementById("Stress_Composite_Score");
                     if (metaStressScoreEl) {
-                        metaStressScoreEl.innerHTML = '<span class="text-warning">N/A</span>';
+                        metaStressScoreEl.innerText = "N/A";
                     }
                 }
             })
@@ -236,7 +236,7 @@
                 console.error("[DEBUG] Error fetching composite score:", err);
                 const metaStressScoreEl = document.getElementById("Stress_Composite_Score");
                 if (metaStressScoreEl) {
-                    metaStressScoreEl.innerHTML = '<span class="text-warning">N/A</span>';
+                    metaStressScoreEl.innerText = "N/A";
                 }
             });
     }
