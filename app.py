@@ -4,6 +4,7 @@ from flask import Flask, render_template, jsonify
 import yfinance as yf
 from fredapi import Fred
 from dotenv import load_dotenv
+from urllib.parse import unquote
 
 app = Flask(__name__)
 
@@ -55,16 +56,15 @@ INDICATOR_SOURCES = {
     "UST 2s/10s Curve": ("fred_spread", ("DGS2", "DGS10"))
 }
 
-@app.route('/api/indicator/<indicator_name>')
+
+
+@app.route('/api/indicator/<path:indicator_name>')
 def get_indicator_data(indicator_name):
-    """
-    Fetch real-time data for a given indicator.
-    Uses yfinance for Yahoo-based tickers and FRED for calculating spreads.
-    """
+    indicator_name = unquote(indicator_name)
+
     source_info = INDICATOR_SOURCES.get(indicator_name)
     if not source_info:
         return jsonify({"name": indicator_name, "value": None, "error": "No data source mapped"}), 200
-
 
     source_type = source_info[0]
     if source_type == "yahoo":
@@ -78,6 +78,9 @@ def get_indicator_data(indicator_name):
         if v2y is not None and v10y is not None:
             spread = v10y - v2y
             return jsonify({"name": indicator_name, "value": spread})
+
+    return jsonify({"name": indicator_name, "value": None, "error": "Unhandled source type"})
+
     return jsonify({"name": indicator_name, "value": None})
 
 @app.route('/dashboard')
