@@ -16,9 +16,24 @@
       ]
     },
     {
-      "category": "Meta View",
+      "category": "Market Stress Indicators",
       "indicators": [
-        "Stress Composite Score"
+        "VIX",
+        "MOVE Index",
+        "VVIX",
+        "VXTLT",
+        "HY Spreads",
+        "Skew Index",
+        "SOFR Spread"
+      ]
+    },
+    {
+      "category": "Flight to Safety",
+      "indicators": [
+        "Gold",
+        "Bitcoin",
+        "USD Index",
+        "Treasury Demand (Bid/Cover)"
       ]
     }
   ]

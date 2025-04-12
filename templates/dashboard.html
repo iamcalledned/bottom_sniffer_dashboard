@@ -5,14 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Bottom Sniffer Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = { darkMode: 'class' };
-  </script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link href="https://cdn.jsdelivr.net/npm/daisyui@4.0.0/dist/full.css" rel="stylesheet" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" />
   <style>
     body { font-family: 'Inter', sans-serif; }
-    .fade-in { animation: fadeIn 1s ease-in-out; }
+    .fade-in { animation: fadeIn 0.8s ease-in-out; }
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(10px); }
       to { opacity: 1; transform: translateY(0); }
@@ -22,40 +20,78 @@
 <body class="bg-neutral text-neutral-content" onload="initIndicators()">
 
   <div class="max-w-7xl mx-auto p-4">
-    <div class="text-center mb-10">
+    <!-- Title -->
+    <div class="text-center mb-8">
       <h1 class="text-4xl font-bold">Bottom Sniffer Dashboard</h1>
-      <div class="text-sm text-gray-400 mt-2">Updated: <span id="timestamp">{{ now }}</span></div>
+      <div class="text-sm text-gray-400 mt-2">Updated: <span id="timestamp">⏳</span></div>
     </div>
 
     <!-- Sniff-O-Meter -->
     <div class="text-center mb-12">
       <h2 class="text-2xl font-semibold mb-2">🔥 Sniff-O-Meter</h2>
-      <div id="sniff-meter" class="text-6xl transition-all duration-500">⏳</div>
+      <div id="sniff-meter" class="text-6xl">⏳</div>
     </div>
 
-    <!-- Dashboard Sections -->
-    {% for category in config.categories %}
-      <div class="mb-10">
-        <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
-          {% if "Macro" in category.category %}📉{% elif "Stress" in category.category %}🧨{% elif "Flight" in category.category %}💰{% endif %}
-          {{ category.category }}
-        </h3>
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {% for indicator in category.indicators %}
-            <div class="card bg-base-200 shadow-md fade-in">
-              <div class="card-body">
-                <h4 class="card-title text-base-content text-sm">{{ indicator }}</h4>
-                <div id="{{ indicator|replace(' ', '_') }}" class="text-3xl font-bold" data-indicator="{{ indicator }}">
-                  <span class="loading loading-dots loading-md"></span>
-                </div>
-              </div>
-            </div>
-          {% endfor %}
-        </div>
-      </div>
-    {% endfor %}
+    <!-- Tabs -->
+    <div role="tablist" class="tabs tabs-boxed bg-base-200 mb-6 justify-center">
+      <a role="tab" class="tab tab-active" onclick="showTab('macro')">📉 Macro</a>
+      <a role="tab" class="tab" onclick="showTab('stress')">🧨 Market Stress</a>
+      <a role="tab" class="tab" onclick="showTab('safety')">💰 Flight to Safety</a>
+    </div>
 
-    <!-- Meta View -->
+    <!-- Tab Content -->
+    <div id="macro" class="tab-pane fade-in">
+      <h3 class="text-xl font-bold mb-4">Macro Crack Monitors</h3>
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {% for indicator in config.categories[0].indicators %}
+          <div class="card bg-base-200 shadow-md fade-in">
+            <div class="card-body">
+              <h4 class="card-title text-base-content text-sm">{{ indicator }}</h4>
+              <div id="{{ indicator|replace(' ', '_') }}" class="text-3xl font-bold" data-indicator="{{ indicator }}">
+                <span class="loading loading-dots loading-md"></span>
+              </div>
+              <canvas class="mt-2" height="40" id="chart-{{ indicator|replace(' ', '_') }}"></canvas>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div id="stress" class="tab-pane hidden fade-in">
+      <h3 class="text-xl font-bold mb-4">Market Stress Indicators</h3>
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {% for indicator in config.categories[1].indicators %}
+          <div class="card bg-base-200 shadow-md fade-in">
+            <div class="card-body">
+              <h4 class="card-title text-base-content text-sm">{{ indicator }}</h4>
+              <div id="{{ indicator|replace(' ', '_') }}" class="text-3xl font-bold" data-indicator="{{ indicator }}">
+                <span class="loading loading-dots loading-md"></span>
+              </div>
+              <canvas class="mt-2" height="40" id="chart-{{ indicator|replace(' ', '_') }}"></canvas>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div id="safety" class="tab-pane hidden fade-in">
+      <h3 class="text-xl font-bold mb-4">Flight to Safety</h3>
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {% for indicator in config.categories[2].indicators %}
+          <div class="card bg-base-200 shadow-md fade-in">
+            <div class="card-body">
+              <h4 class="card-title text-base-content text-sm">{{ indicator }}</h4>
+              <div id="{{ indicator|replace(' ', '_') }}" class="text-3xl font-bold" data-indicator="{{ indicator }}">
+                <span class="loading loading-dots loading-md"></span>
+              </div>
+              <canvas class="mt-2" height="40" id="chart-{{ indicator|replace(' ', '_') }}"></canvas>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Composite Meta -->
     <div class="mt-16 text-center">
       <h2 class="text-2xl font-semibold mb-4">Meta Stress Score</h2>
       <div id="Stress_Composite_Score" class="text-5xl font-extrabold text-primary animate-pulse" data-indicator="Stress Composite Score">⏳</div>
@@ -63,28 +99,38 @@
 
     <!-- Footer -->
     <footer class="mt-16 text-center text-sm text-gray-500">
-      Data from FRED, Yahoo Finance, and other elite sniffer sources. Built with ❤️ by Sniffer Labs™
+      Data from FRED, Yahoo Finance, and wherever else we could sniff it. Built with ❤️ by Bottom Sniffer Labs™
     </footer>
   </div>
 
   <script>
+    function showTab(tab) {
+      document.querySelectorAll(".tab-pane").forEach(p => p.classList.add("hidden"));
+      document.getElementById(tab).classList.remove("hidden");
+
+      document.querySelectorAll(".tab").forEach(t => t.classList.remove("tab-active"));
+      document.querySelector(`.tab[onclick="showTab('${tab}')"]`).classList.add("tab-active");
+    }
+
     function fetchIndicator(indicatorName, elementId) {
       fetch('/api/indicator/' + encodeURIComponent(indicatorName))
         .then(res => res.json())
         .then(data => {
           const el = document.getElementById(elementId);
           if (!el) return;
+
           if (data.value !== null && data.value !== undefined) {
             const value = data.value.toFixed(2);
             let cls = "text-success";
-
             if (indicatorName.includes("Curve") && data.value < 0) cls = "text-error";
             else if (indicatorName.includes("Unemployment") && data.value > 5) cls = "text-error";
             else if (indicatorName.includes("CPI") && data.value > 4) cls = "text-error";
             else if (data.value === 0) cls = "text-warning";
 
             el.innerHTML = `<span class="${cls}">${value}</span>`;
+
             if (indicatorName === "Stress Composite Score") updateSniffMeter(data.value);
+            drawSparkline("chart-" + elementId, mockChartData());
           } else {
             el.innerHTML = '<span class="text-warning">N/A</span>';
           }
@@ -115,6 +161,43 @@
       else if (score > 50) el.innerText = "😬";
       else if (score > 30) el.innerText = "😐";
       else el.innerText = "😎🚬";
+    }
+
+    function drawSparkline(canvasId, values) {
+      const ctx = document.getElementById(canvasId);
+      if (!ctx) return;
+
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: values.map((_, i) => i),
+          datasets: [{
+            data: values,
+            borderColor: "#7dd3fc",
+            tension: 0.3,
+            borderWidth: 1,
+            fill: false,
+            pointRadius: 0
+          }]
+        },
+        options: {
+          plugins: { legend: { display: false } },
+          scales: { x: { display: false }, y: { display: false } },
+          elements: { line: { borderJoinStyle: 'round' } },
+          responsive: true,
+          maintainAspectRatio: false
+        }
+      });
+    }
+
+    function mockChartData() {
+      let data = [];
+      let val = Math.random() * 10 + 2;
+      for (let i = 0; i < 20; i++) {
+        val += Math.random() * 2 - 1;
+        data.push(val.toFixed(2));
+      }
+      return data;
     }
   </script>
 </body>
