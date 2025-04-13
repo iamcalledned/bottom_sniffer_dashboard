@@ -360,15 +360,19 @@ Composite Score =
     }
 
     function loadNedFeed() {
-      fetch("/api/ned_feed")
-        .then(res => res.json())
-        .then(data => {
-          const commentary = document.getElementById("ned-commentary");
-          const tweets = document.getElementById("market-tweets");
-          commentary.innerHTML = data.ned.map(item => `<p><span class="text-primary">[${item.time}]</span> ${item.text}</p>`).join('');
-          tweets.innerHTML = data.tweets.map(tweet => `<p><span class="text-secondary">@${tweet.author}</span>: "${tweet.text}"</p>`).join('');
-        });
-}
+    fetch("/api/tweets")
+      .then(res => res.json())
+      .then(data => {
+        const tweets = document.getElementById("market-tweets");
+        if (data.tweets) {
+          tweets.innerHTML = data.tweets.map(tweet => `
+            <p><span class="text-secondary">🕊️ Twitter</span>: "${tweet.text}"</p>
+          `).join('');
+        } else {
+          tweets.innerHTML = `<p>Error loading tweets</p>`;
+        }
+      });
+  }
 
 
 
