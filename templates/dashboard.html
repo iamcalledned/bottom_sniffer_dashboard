@@ -166,39 +166,44 @@
           </div>
         </div>
     
-        <!-- Twitter Feed -->
-        <div class="card bg-base-200 shadow-md p-4">
-          <h2 class="text-xl font-bold mb-2 text-primary">🔥 Key Market Tweets</h2>
-          <div id="market-tweets" class="text-sm text-neutral-content space-y-4">
-            <p class="italic text-gray-400">Loading tweets...</p>
-          </div>
-        </div>
+<!-- Twitter Feeds -->
+<div class="card bg-base-200 shadow-md p-4">
+  <h2 class="text-xl font-bold mb-4 text-primary">Key Market Feeds</h2>
+  <div class="flex flex-wrap justify-center gap-6">
+    <div>
+      <a class="twitter-timeline" 
+         data-width="350" 
+         data-height="600" 
+         data-theme="dark" 
+         href="https://twitter.com/zerohedge">
+         Tweets by @zerohedge
+      </a>
+    </div>
+    <div>
+      <a class="twitter-timeline" 
+         data-width="350" 
+         data-height="600" 
+         data-theme="dark" 
+         href="https://twitter.com/fxmacro">
+         Tweets by @fxmacro
+      </a>
+    </div>
+    <div>
+      <a class="twitter-timeline" 
+         data-width="350" 
+         data-height="600" 
+         data-theme="dark" 
+         href="https://twitter.com/bespokeinvest">
+         Tweets by @bespokeinvest
+      </a>
+    </div>
+  </div>
+</div>
     
       </div>
     </div>
     
-    <script>
-    function loadNedFeed() {
-      fetch("/api/tweets")
-        .then(res => res.json())
-        .then(data => {
-          const tweets = document.getElementById("market-tweets");
-          if (data.tweets && data.tweets.length > 0) {
-            tweets.innerHTML = data.tweets.map(tweet => `
-              <div class="bg-base-100 p-3 rounded shadow-sm border border-base-300">
-                <p><span class="text-secondary font-medium">🕊️ Twitter</span>: ${tweet.text}</p>
-              </div>
-            `).join('');
-          } else {
-            tweets.innerHTML = `<p class="text-warning">No tweets available at the moment.</p>`;
-          }
-        })
-        .catch(err => {
-          document.getElementById("market-tweets").innerHTML =
-            `<p class="text-error">Failed to load tweets: ${err}</p>`;
-        });
-    }
-    </script>
+
         </div>    
     <div id="methodology" class="tab-pane hidden fade-in">
       <h3 class="text-xl font-bold mb-4">Market Stress Score: Methodology</h3>
@@ -282,11 +287,6 @@ Composite Score =
       document.querySelectorAll(".tab").forEach(t => t.classList.remove("tab-active"));
       document.querySelector(`.tab[onclick="showTab('${tab}')"]`).classList.add("tab-active");
 
-      // 🚀 Fire tweet loader when switching to Ned’s feed
-      if (tab === "nedfeed") {
-        loadNedFeed();
-      }
-    }
 
   
     function fetchIndicator(indicatorName, elementId) {
@@ -540,6 +540,7 @@ Composite Score =
       }
     }
   </script>
+  <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
   </body>
 </html>
 ``` 
