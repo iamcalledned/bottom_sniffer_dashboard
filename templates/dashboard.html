@@ -91,6 +91,7 @@
       <button class="tab w-full sm:w-auto tab-active bg-base-200 px-4 py-2 rounded text-sm font-medium text-center" onclick="showTab('macro')">📉 Macro</button>
       <button class="tab w-full sm:w-auto bg-base-200 px-4 py-2 rounded text-sm font-medium text-center" onclick="showTab('stress')">🧨 Market Stress</button>
       <button class="tab w-full sm:w-auto bg-base-200 px-4 py-2 rounded text-sm font-medium text-center" onclick="showTab('safety')">💰 Flight to Safety</button>
+      <button class="tab w-full sm:w-auto bg-base-200 px-4 py-2 rounded text-sm font-medium text-center" onclick="showTab('nedfeed')">🗞️ Ned’s Feed</button>
       <button class="tab w-full sm:w-auto bg-base-200 px-4 py-2 rounded text-sm font-medium text-center" onclick="showTab('methodology')">📘 Methodology</button>
     </div>
     
@@ -153,7 +154,29 @@
         {% endfor %}
       </div>
     </div>
-
+    <div id="nedfeed" class="tab-pane hidden fade-in">
+      <h3 class="text-xl font-bold mb-4">🧠 Ned's Live Market Commentary</h3>
+    
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Ned's Commentary -->
+        <div class="card bg-base-200 shadow-lg p-4">
+          <h4 class="text-lg font-semibold mb-2">Ned's Sniffing Status</h4>
+          <div id="ned-commentary" class="text-sm text-gray-300 space-y-2">
+            <p><span class="text-primary">[10:32 AM]</span> Fed hike odds climbing. Bond market just flinched.</p>
+            <p><span class="text-primary">[10:35 AM]</span> Volatility remains stubborn — keep an eye on MOVE index.</p>
+          </div>
+        </div>
+    
+        <!-- Twitter / Market Posts -->
+        <div class="card bg-base-200 shadow-lg p-4">
+          <h4 class="text-lg font-semibold mb-2">🔥 Key Market Tweets</h4>
+          <div id="market-tweets" class="text-sm text-gray-300 space-y-2">
+            <p><span class="text-secondary">@zerohedge</span>: "Bond market screaming 'something broke'."</p>
+            <p><span class="text-secondary">@markets</span>: "Gold hits new high on rate cut expectations."</p>
+          </div>
+        </div>
+      </div>
+    </div>    
     <div id="methodology" class="tab-pane hidden fade-in">
       <h3 class="text-xl font-bold mb-4">Market Stress Score: Methodology</h3>
       <p class="mb-4">
@@ -235,6 +258,7 @@ Composite Score =
       document.getElementById(tab).classList.remove("hidden");
       document.querySelectorAll(".tab").forEach(t => t.classList.remove("tab-active"));
       document.querySelector(`.tab[onclick="showTab('${tab}')"]`).classList.add("tab-active");
+
     }
   
     function fetchIndicator(indicatorName, elementId) {
@@ -334,6 +358,19 @@ Composite Score =
                       : "🌟 Ultra Risk-On";
       el.innerText = riskLevel;
     }
+
+    function loadNedFeed() {
+      fetch("/api/ned_feed")
+        .then(res => res.json())
+        .then(data => {
+          const commentary = document.getElementById("ned-commentary");
+          const tweets = document.getElementById("market-tweets");
+          commentary.innerHTML = data.ned.map(item => `<p><span class="text-primary">[${item.time}]</span> ${item.text}</p>`).join('');
+          tweets.innerHTML = data.tweets.map(tweet => `<p><span class="text-secondary">@${tweet.author}</span>: "${tweet.text}"</p>`).join('');
+        });
+}
+
+
 
     function fetchCompositeScore() {
         fetch("/api/composite_score")
