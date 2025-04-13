@@ -17,6 +17,7 @@ twitter_feed = Blueprint('twitter_feed', __name__)
 
 @twitter_feed.route("/api/tweets")
 def get_recent_tweets():
+    print("Loaded usernames:", os.getenv("TWITTER_USERNAMES"))
     try:
         all_tweets = []
 
