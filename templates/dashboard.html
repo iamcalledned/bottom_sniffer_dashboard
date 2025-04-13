@@ -276,13 +276,18 @@ Composite Score =
   <script>
     const logScaleIndicators = ["Bitcoin", "BTC-USD", "VIX", "Gold", "GC=F", "VVIX"];
   
-    function showTab(tab) {
+        function showTab(tab) {
       document.querySelectorAll(".tab-pane").forEach(p => p.classList.add("hidden"));
       document.getElementById(tab).classList.remove("hidden");
       document.querySelectorAll(".tab").forEach(t => t.classList.remove("tab-active"));
       document.querySelector(`.tab[onclick="showTab('${tab}')"]`).classList.add("tab-active");
 
+      // 🚀 Fire tweet loader when switching to Ned’s feed
+      if (tab === "nedfeed") {
+        loadNedFeed();
+      }
     }
+
   
     function fetchIndicator(indicatorName, elementId) {
         // Skip updating the Stress Composite Score in this function
@@ -381,23 +386,6 @@ Composite Score =
                       : "🌟 Ultra Risk-On";
       el.innerText = riskLevel;
     }
-
-    function loadNedFeed() {
-    fetch("/api/tweets")
-      .then(res => res.json())
-      .then(data => {
-        const tweets = document.getElementById("market-tweets");
-        if (data.tweets) {
-          tweets.innerHTML = data.tweets.map(tweet => `
-            <p><span class="text-secondary">🕊️ Twitter</span>: "${tweet.text}"</p>
-          `).join('');
-        } else {
-          tweets.innerHTML = `<p>Error loading tweets</p>`;
-        }
-      });
-  }
-
-
 
     function fetchCompositeScore() {
         fetch("/api/composite_score")
