@@ -8,12 +8,21 @@ from threading import Thread
 from time import sleep
 from datetime import datetime
 import json
+from twitter_feed import twitter_feed
+from dotenv import load_dotenv
+load_dotenv()
+
+
+
+
 
 app = Flask(__name__)
 
 # Load .env for FRED key
 load_dotenv()
+app.register_blueprint(twitter_feed)
 FRED_API_KEY = os.getenv("FRED_API_KEY")
+TWITTER_BEARER_TOKEN = os.getenv("TWITTER_BEARER_TOKEN")
 fred = Fred(api_key=FRED_API_KEY)
 
 # Load dashboard config
@@ -300,6 +309,31 @@ def classify_risk_level(score):
             "label": "Crisis / Extreme Risk-Off",
             "description": "Broad-based market stress is underway. Curve inversion, credit dysfunction, macro deterioration, and flight to safety are all flashing at once. This score historically aligns with systemic events or severe drawdowns."
         }
+
+def fetch_latest_tweets(username="zerohedge", count=5):
+    try:
+        client = tweepy.Client(bearer_token=TWITTER_BEARER_TOKEN)
+        user = client.get_user(username=username)
+        tweets = client.get_users_tweets(user.data.id, max_results=count)
+
+        tweet_data = []
+        for tweet in tweets.data:
+            tweet_data.append({
+                "text": tweet.text,
+                "created_at": str(tweet.created_at) if tweet.created_at else "N/A"
+            })
+        return tweet_data
+    except Exception as e:
+        print(f"[Twitter] Error fetching tweets: {e}")
+        return []
+
+@app.route("/api/twitter_feed")
+def twitter_feed():
+    return jsonify({
+        "source": "zerohedge",
+        "tweets": fetch_latest_tweets()
+    })
+
 
 @app.route("/api/indicator/<path:indicator_name>")
 def get_indicator_data(indicator_name):
