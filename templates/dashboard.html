@@ -155,28 +155,51 @@
       </div>
     </div>
     <div id="nedfeed" class="tab-pane hidden fade-in">
-      <h3 class="text-xl font-bold mb-4">🧠 Ned's Live Market Commentary</h3>
+      <div class="p-4 space-y-6">
     
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <!-- Ned's Commentary -->
-        <div class="card bg-base-200 shadow-lg p-4">
-          <h4 class="text-lg font-semibold mb-2">Ned's Sniffing Status</h4>
-          <div id="ned-commentary" class="text-sm text-gray-300 space-y-2">
-            <p><span class="text-primary">[10:32 AM]</span> Fed hike odds climbing. Bond market just flinched.</p>
-            <p><span class="text-primary">[10:35 AM]</span> Volatility remains stubborn — keep an eye on MOVE index.</p>
+        <!-- Ned's Sniffing Status -->
+        <div class="card bg-base-200 shadow-md p-4">
+          <h2 class="text-xl font-bold mb-2 text-primary">🧠 Ned's Sniffing Status</h2>
+          <div id="ned-commentary" class="text-sm text-neutral-content space-y-2">
+            <p><span class="text-accent font-semibold">[10:32 AM]</span> Fed hike odds climbing. Bond market just flinched.</p>
+            <p><span class="text-accent font-semibold">[10:35 AM]</span> Volatility remains stubborn — MOVE index remains elevated.</p>
           </div>
         </div>
     
-        <!-- Twitter / Market Posts -->
-        <div class="card bg-base-200 shadow-lg p-4">
-          <h4 class="text-lg font-semibold mb-2">🔥 Key Market Tweets</h4>
-          <div id="market-tweets" class="text-sm text-gray-300 space-y-2">
-            <p><span class="text-secondary">@zerohedge</span>: "Bond market screaming 'something broke'."</p>
-            <p><span class="text-secondary">@markets</span>: "Gold hits new high on rate cut expectations."</p>
+        <!-- Twitter Feed -->
+        <div class="card bg-base-200 shadow-md p-4">
+          <h2 class="text-xl font-bold mb-2 text-primary">🔥 Key Market Tweets</h2>
+          <div id="market-tweets" class="text-sm text-neutral-content space-y-4">
+            <p class="italic text-gray-400">Loading tweets...</p>
           </div>
         </div>
+    
       </div>
-    </div>    
+    </div>
+    
+    <script>
+    function loadNedFeed() {
+      fetch("/api/tweets")
+        .then(res => res.json())
+        .then(data => {
+          const tweets = document.getElementById("market-tweets");
+          if (data.tweets && data.tweets.length > 0) {
+            tweets.innerHTML = data.tweets.map(tweet => `
+              <div class="bg-base-100 p-3 rounded shadow-sm border border-base-300">
+                <p><span class="text-secondary font-medium">🕊️ Twitter</span>: ${tweet.text}</p>
+              </div>
+            `).join('');
+          } else {
+            tweets.innerHTML = `<p class="text-warning">No tweets available at the moment.</p>`;
+          }
+        })
+        .catch(err => {
+          document.getElementById("market-tweets").innerHTML =
+            `<p class="text-error">Failed to load tweets: ${err}</p>`;
+        });
+    }
+    </script>
+        </div>    
     <div id="methodology" class="tab-pane hidden fade-in">
       <h3 class="text-xl font-bold mb-4">Market Stress Score: Methodology</h3>
       <p class="mb-4">
