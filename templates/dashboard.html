@@ -167,38 +167,53 @@
         </div>
     
 <!-- Twitter Feeds -->
-<div class="card bg-base-200 shadow-md p-4">
-  <h2 class="text-xl font-bold mb-4 text-primary">Key Market Feeds</h2>
-  <div class="flex flex-wrap justify-center gap-6">
-    <div>
-      <a class="twitter-timeline" 
-         data-width="350" 
-         data-height="600" 
-         data-theme="dark" 
+<!-- Twitter Feeds -->
+<div class="card bg-base-200 shadow-md p-6">
+  <h2 class="text-xl font-bold mb-6 text-primary text-center">Key Market Feeds</h2>
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    
+    <!-- ZeroHedge -->
+    <div class="bg-base-100 p-3 rounded-lg shadow-md min-h-[650px] flex flex-col">
+      <div class="text-center font-semibold text-accent mb-2">Posts from @zerohedge</div>
+      <a class="twitter-timeline"
+         data-height="600"
+         data-theme="dark"
+         data-chrome="noborders noheader nofooter"
          href="https://twitter.com/zerohedge">
          Tweets by @zerohedge
       </a>
     </div>
-    <div>
-      <a class="twitter-timeline" 
-         data-width="350" 
-         data-height="600" 
-         data-theme="dark" 
+
+    <!-- FxMacro -->
+    <div class="bg-base-100 p-3 rounded-lg shadow-md min-h-[650px] flex flex-col">
+      <div class="text-center font-semibold text-accent mb-2">Posts from @fxmacro</div>
+      <a class="twitter-timeline"
+         data-height="600"
+         data-theme="dark"
+         data-chrome="noborders noheader nofooter"
          href="https://twitter.com/fxmacro">
          Tweets by @fxmacro
       </a>
     </div>
-    <div>
-      <a class="twitter-timeline" 
-         data-width="350" 
-         data-height="600" 
-         data-theme="dark" 
+
+    <!-- BespokeInvest -->
+    <div class="bg-base-100 p-3 rounded-lg shadow-md min-h-[650px] flex flex-col">
+      <div class="text-center font-semibold text-accent mb-2">Posts from @bespokeinvest</div>
+      <a class="twitter-timeline"
+         data-height="600"
+         data-theme="dark"
+         data-chrome="noborders noheader nofooter"
          href="https://twitter.com/bespokeinvest">
          Tweets by @bespokeinvest
       </a>
     </div>
+
   </div>
 </div>
+
+<!-- Load Twitter widget script once -->
+<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+
     
       </div>
     </div>
